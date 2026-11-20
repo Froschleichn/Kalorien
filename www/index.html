@@ -2,6 +2,16 @@
 <html lang="de">
 <head>
 <meta charset="utf-8">
+<script>
+var VERSION=2;
+(function(){try{
+  var l=JSON.parse(localStorage.getItem('liveapp')||'null');
+  if(l&&l.v>VERSION&&l.html){
+    if(localStorage.getItem('liveboot')===String(l.v)){localStorage.removeItem('liveapp');localStorage.removeItem('liveboot')}
+    else{localStorage.setItem('liveboot',String(l.v));document.open();document.write(l.html);document.close()}
+  }
+}catch(e){}})();
+</script>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#2f855a">
 <title>Kalorien</title>
@@ -51,7 +61,9 @@ video{width:100%;border-radius:10px;margin-top:8px}
   <button class="g" id="exp">Export</button>
   <button class="g" id="imp">Import</button>
   <input type="file" id="file" accept=".json" hidden>
+  <button class="g" id="upd">Update</button>
 </div>
+<div class="mu" style="text-align:center;font-size:12px;margin-top:8px"><span id="ver"></span> <span id="ust"></span></div>
 
 <button class="fab" id="add">+ Hinzufügen</button>
 
@@ -93,6 +105,7 @@ video{width:100%;border-radius:10px;margin-top:8px}
 </dialog>
 
 <script>
+;(function(){
 const $=s=>document.querySelector(s);
 let db;try{db=JSON.parse(localStorage.getItem('kt'))}catch(e){}
 db=db||{goal:2000,e:[]};db.del=db.del||[];db.gt=db.gt||0;
@@ -254,7 +267,33 @@ $('#imp').onclick=()=>$('#file').click();
 $('#file').onchange=async e=>{
   try{const j=JSON.parse(await e.target.files[0].text());if(Array.isArray(j.e)){db=j;save();render()}}catch(x){alert('Ungültige Datei')}
 };
+
+// Live-Update: holt die neueste index.html aus dem GitHub-Repository und startet damit neu
+$('#ver').textContent='Version '+VERSION;
+$('#upd').onclick=async()=>{
+  const st=$('#ust');
+  let repo=localStorage.getItem('krepo');
+  if(!repo){
+    repo=(prompt('GitHub-Repository für Updates (benutzer/repo):','')||'').trim();
+    if(!/^[\w.-]+\/[\w.-]+$/.test(repo)){st.textContent='· Ungültige Eingabe.';return}
+    localStorage.setItem('krepo',repo);
+  }
+  st.textContent='· Suche Update …';
+  try{
+    const res=await fetch(`https://raw.githubusercontent.com/${repo}/main/www/index.html?t=${Date.now()}`,{cache:'no-store'});
+    if(!res.ok){localStorage.removeItem('krepo');st.textContent='· Repository nicht gefunden (muss öffentlich sein). Nochmal tippen und Adresse prüfen.';return}
+    const html=await res.text(),m=html.match(/var VERSION=(\d+)/);
+    if(!m||!html.includes('</html>')||!html.includes('id="upd"')){st.textContent='· Datei im Repository ist keine gültige App-Version.';return}
+    const v=+m[1];
+    if(v<=VERSION){st.textContent='· Bereits aktuell.';return}
+    localStorage.setItem('liveapp',JSON.stringify({v,html}));
+    st.textContent='· Version '+v+' geladen, starte neu …';
+    setTimeout(()=>location.reload(),600);
+  }catch(e){st.textContent='· Update fehlgeschlagen (keine Verbindung?).'}
+};
 render();
+try{localStorage.removeItem('liveboot')}catch(e){}
+})();
 </script>
 </body>
 </html>
