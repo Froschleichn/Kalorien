@@ -1,0 +1,68 @@
+[
+ {
+  "v": 23,
+  "name": "2026.11.20.11",
+  "date": "2026-11-20",
+  "notes": "Versionierung: Datum-Version, Changelog, Versionsliste mit Rollback"
+ },
+ {
+  "v": 22,
+  "name": "2026.11.20.10",
+  "date": "2026-11-20",
+  "notes": "Suche versucht die Verbindung 5 s lang erneut"
+ },
+ {
+  "v": 21,
+  "name": "2026.11.20.9",
+  "date": "2026-11-20",
+  "notes": "Barcode-Scan per Foto (aufs Kamerabild tippen)"
+ },
+ {
+  "v": 20,
+  "name": "2026.11.20.8",
+  "date": "2026-11-20",
+  "notes": "BLS-Hinweis unter den Treffern entfernt"
+ },
+ {
+  "v": 19,
+  "name": "2026.11.20.7",
+  "date": "2026-11-20",
+  "notes": "BLS 4.0 als Offline-Suchquelle (7140 Lebensmittel)"
+ },
+ {
+  "v": 18,
+  "name": "2026.11.20.6",
+  "date": "2026-11-20",
+  "notes": "Eingebaute Grundnahrungsmittel, Sofort-Suche, eigene Produkte"
+ },
+ {
+  "v": 17,
+  "name": "2026.11.20.5",
+  "date": "2026-11-20",
+  "notes": "Reiter Kalorien | Gewicht"
+ },
+ {
+  "v": 16,
+  "name": "2026.11.20.4",
+  "date": "2026-11-20",
+  "notes": "Hinweis bezieht sich auf das Tagesziel"
+ },
+ {
+  "v": 15,
+  "name": "2026.11.20.3",
+  "date": "2026-11-20",
+  "notes": "Nicht erfasste Tage zählen als Erhaltungsverbrauch"
+ },
+ {
+  "v": 14,
+  "name": "2026.11.20.2",
+  "date": "2026-11-20",
+  "notes": "Zielprognose mit Grundumsatz und TDEE"
+ },
+ {
+  "v": 13,
+  "name": "2026.11.20.1",
+  "date": "2026-11-20",
+  "notes": "Gewichtsseite mit Verlauf und Zielgewicht"
+ }
+]

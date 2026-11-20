@@ -3,7 +3,8 @@
 <head>
 <meta charset="utf-8">
 <script>
-var VERSION=22;
+var VERSION=23;
+var VERSION_NAME='2026.11.20.11';
 window.__live=0;
 (function(){try{
   var l=JSON.parse(localStorage.getItem('liveapp')||'null');
@@ -83,7 +84,7 @@ input[type=date]{min-height:44px}
   <input type="file" id="file" accept=".json" hidden>
   <button class="g" id="upd">Update</button>
 </div>
-<div class="mu" style="text-align:center;font-size:12px;margin-top:8px"><span id="ver"></span> <span id="ust"></span></div>
+<div class="mu" style="text-align:center;font-size:12px;margin-top:8px"><span id="ver"></span> <span id="ust"></span> <a href="#" id="vsel" style="color:var(--ac)">· Versionen</a></div>
 
 <button class="fab" id="add">+ Hinzufügen</button>
 <button class="beer" id="beer" aria-label="Bier hinzufügen: Tippen 0,5 l, lang drücken 1 l" title="Tippen: 0,5 l · Lang drücken: 1 l (Maß)">
@@ -173,6 +174,12 @@ input[type=date]{min-height:44px}
   </div>
 </dialog>
 
+<dialog id="vdlg">
+  <div class="row sp"><b>Versionen</b><button class="x" id="vcl">×</button></div>
+  <div class="mu" id="vm" style="font-size:12px;margin:6px 0">Antippen lädt die Version und startet neu. Versionen, die älter als deine installierte App sind, werden ignoriert – dann „Eingebaute Version“ wählen.</div>
+  <div id="vlist"></div>
+</dialog>
+
 <dialog id="sdlg">
   <div class="row sp"><b>Übersicht</b><button class="x" id="scl">×</button></div>
   <div class="row" style="margin:10px 0"><button class="stab" data-v="w" style="flex:1">Woche</button><button class="stab g" data-v="m" style="flex:1">Monat</button><button class="stab g" data-v="y" style="flex:1">Jahr</button></div>
@@ -234,7 +241,7 @@ function norm(p){
 }
 // Offline-Cache: alle gesehenen Produkte bleiben auf dem Handy (max. 500, älteste fliegen zuerst raus)
 let cache={};try{cache=JSON.parse(localStorage.getItem('kcache')||'{}')||{}}catch(e){}
-function showVer(){$('#ver').textContent='Version '+VERSION+' · '+Object.keys(cache).length+' Produkte offline'}
+function showVer(){$('#ver').textContent='Version '+VERSION_NAME+' (Build '+VERSION+') · '+Object.keys(cache).length+' Produkte offline'}
 function remember(list){
   const t=Date.now();list.forEach(x=>{cache[x.key]={...x,t}});
   Object.keys(cache).sort((a,b)=>cache[b].t-cache[a].t).slice(500).forEach(k=>delete cache[k]);
@@ -752,26 +759,62 @@ $('#file').onchange=async e=>{
 
 // Live-Update: holt die neueste index.html aus dem GitHub-Repository und startet damit neu
 showVer();
-$('#upd').onclick=async()=>{
-  const st=$('#ust');
+try{const n=localStorage.getItem('kupdnote'),x=localStorage.getItem('kupdexp');if(n){$('#ust').textContent='· '+(x&&x!==VERSION_NAME?'Version '+x+' ist älter als die installierte App und wird nicht verwendet (Eingebaute Version wählen).':n);localStorage.removeItem('kupdnote');localStorage.removeItem('kupdexp')}}catch(e){}
+const RAW=(repo,ref)=>`https://raw.githubusercontent.com/${repo}/${ref}/www/`;
+function getRepo(){
   let repo=localStorage.getItem('krepo');
   if(!repo){
     repo=(prompt('GitHub-Repository für Updates (benutzer/repo):','')||'').trim();
-    if(!/^[\w.-]+\/[\w.-]+$/.test(repo)){st.textContent='· Ungültige Eingabe.';return}
+    if(!/^[\w.-]+\/[\w.-]+$/.test(repo))return null;
     localStorage.setItem('krepo',repo);
   }
+  return repo;
+}
+async function fetchChangelog(repo){
+  try{const r=await fetch(RAW(repo,'main')+'changelog.json?t='+Date.now(),{cache:'no-store'});return r.ok?await r.json():[]}catch(e){return[]}
+}
+// Lädt eine index.html, prüft sie und startet damit neu (Update oder Rollback)
+async function applyVersion(repo,ref,st,label){
+  const res=await fetch(RAW(repo,ref)+'index.html?t='+Date.now(),{cache:'no-store'});
+  if(!res.ok){st.textContent='· Version nicht gefunden.';return false}
+  const html=await res.text(),m=html.match(/var VERSION=(\d+)/);
+  if(!m||!html.includes('</html>')||!html.includes('id="upd"')){st.textContent='· Datei im Repository ist keine gültige App-Version.';return false}
+  const v=+m[1],nm=(html.match(/var VERSION_NAME='([^']+)'/)||[])[1]||('Build '+v);
+  return{v,nm,html};
+}
+$('#upd').onclick=async()=>{
+  const st=$('#ust'),repo=getRepo();
+  if(!repo){st.textContent='· Ungültige Eingabe.';return}
   st.textContent='· Suche Update …';
   try{
-    const res=await fetch(`https://raw.githubusercontent.com/${repo}/main/www/index.html?t=${Date.now()}`,{cache:'no-store'});
-    if(!res.ok){localStorage.removeItem('krepo');st.textContent='· Repository nicht gefunden (muss öffentlich sein). Nochmal tippen und Adresse prüfen.';return}
-    const html=await res.text(),m=html.match(/var VERSION=(\d+)/);
-    if(!m||!html.includes('</html>')||!html.includes('id="upd"')){st.textContent='· Datei im Repository ist keine gültige App-Version.';return}
-    const v=+m[1];
-    if(v<=VERSION){st.textContent='· Bereits aktuell.';return}
-    localStorage.setItem('liveapp',JSON.stringify({v,html}));
-    st.textContent='· Version '+v+' geladen, starte neu …';
+    const r=await applyVersion(repo,'main',st);if(!r)return;
+    if(r.v<=VERSION){st.textContent='· Bereits aktuell.';return}
+    const cl=await fetchChangelog(repo),en=cl.find(x=>x.v===r.v);
+    localStorage.setItem('liveapp',JSON.stringify({v:r.v,html:r.html}));
+    localStorage.setItem('kupdnote','Aktualisiert auf '+r.nm+(en?': '+en.notes:''));
+    st.textContent='· Version '+r.nm+' geladen, starte neu …';
     setTimeout(()=>location.reload(),600);
   }catch(e){st.textContent='· Update fehlgeschlagen (keine Verbindung?).'}
+};
+$('#vsel').onclick=async ev=>{
+  ev.preventDefault();const repo=getRepo();if(!repo)return;
+  $('#vlist').innerHTML='<div class="mu">Lade …</div>';$('#vdlg').showModal();
+  const cl=await fetchChangelog(repo);
+  $('#vlist').innerHTML=`<div class="res" data-v="0" style="color:var(--tx)">Eingebaute Version (ohne Updates)<div class="mu">so, wie sie installiert wurde</div></div>`+
+    (cl.length?cl.map(x=>`<div class="res" data-v="${x.v}" style="color:var(--tx)">${esc(x.name)} · Build ${x.v}${x.v===VERSION?' · <b>aktuell</b>':''}<div class="mu">${esc(x.notes)}</div></div>`).join(''):'<div class="mu">Keine Versionsliste erreichbar (keine Verbindung?).</div>');
+};
+$('#vcl').onclick=()=>$('#vdlg').close();
+$('#vlist').onclick=async ev=>{
+  const el=ev.target.closest('[data-v]');if(!el)return;const v=+el.dataset.v,st=$('#vm');
+  if(v===0){localStorage.removeItem('liveapp');localStorage.setItem('kupdnote','Eingebaute Version aktiv');location.reload();return}
+  if(v===VERSION)return;
+  const repo=getRepo();st.textContent='Lade Version …';
+  try{
+    const r=await applyVersion(repo,'v'+v,st);if(!r)return;
+    localStorage.setItem('liveapp',JSON.stringify({v:r.v,html:r.html}));
+    localStorage.setItem('kupdnote','Version '+r.nm+' geladen');localStorage.setItem('kupdexp',r.nm);
+    location.reload();
+  }catch(e){st.textContent='Laden fehlgeschlagen (keine Verbindung?).'}
 };
 render();
 try{localStorage.removeItem('liveboot')}catch(e){}
