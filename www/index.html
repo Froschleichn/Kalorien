@@ -3,12 +3,16 @@
 <head>
 <meta charset="utf-8">
 <script>
-var VERSION=3;
+var VERSION=4;
+window.__live=0;
 (function(){try{
   var l=JSON.parse(localStorage.getItem('liveapp')||'null');
   if(l&&l.v>VERSION&&l.html){
     if(localStorage.getItem('liveboot')===String(l.v)){localStorage.removeItem('liveapp');localStorage.removeItem('liveboot')}
-    else{localStorage.setItem('liveboot',String(l.v));document.open();document.write(l.html);document.close()}
+    else{
+      localStorage.setItem('liveboot',String(l.v));window.__live=1;
+      document.addEventListener('DOMContentLoaded',function(){document.open();document.write(l.html);document.close()});
+    }
   }
 }catch(e){}})();
 </script>
@@ -106,6 +110,8 @@ video{width:100%;border-radius:10px;margin-top:8px}
 
 <script>
 ;(function(){
+if(window.__live)return;
+function boot(){
 const $=s=>document.querySelector(s);
 let db;try{db=JSON.parse(localStorage.getItem('kt'))}catch(e){}
 db=db||{goal:2000,e:[]};db.del=db.del||[];db.gt=db.gt||0;db.items=db.items||{};
@@ -345,6 +351,17 @@ $('#upd').onclick=async()=>{
 };
 render();
 try{localStorage.removeItem('liveboot')}catch(e){}
+}
+boot();
+// Falls eine ältere eingebaute Version das Update ins laufende Dokument geschrieben hat: Doppelanzeige entfernen
+document.addEventListener('DOMContentLoaded',function(){
+  var p=document.querySelectorAll('#prev');
+  if(p.length>1){
+    var n=p[1].closest('body > *');
+    while(n){var nx=n.nextSibling;n.remove();n=nx}
+    boot();
+  }
+});
 })();
 </script>
 </body>
