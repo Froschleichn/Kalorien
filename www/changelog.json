@@ -1,5 +1,11 @@
 [
  {
+  "v": 29,
+  "name": "2026.11.20.17",
+  "date": "2026-11-20",
+  "notes": "Packungsgröße aus Open Food Facts als Portion (z. B. Packung 75 g)"
+ },
+ {
   "v": 28,
   "name": "2026.11.20.16",
   "date": "2026-11-20",

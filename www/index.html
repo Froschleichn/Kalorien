@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <script>
-var VERSION=28;
-var VERSION_NAME='2026.11.20.16';
+var VERSION=29;
+var VERSION_NAME='2026.11.20.17';
 window.__live=0;
 (function(){try{
   var l=JSON.parse(localStorage.getItem('liveapp')||'null');
@@ -288,7 +288,7 @@ $('#add').onclick=()=>{$('#dlg').showModal();showFav()};
 $('#cl').onclick=closeD;
 
 const OFF='https://world.openfoodfacts.org';
-const FIELDS='code,product_name,brands,nutriments,serving_size,serving_quantity';
+const FIELDS='code,product_name,brands,nutriments,serving_size,serving_quantity,quantity';
 function norm(p){
   const n=p.nutriments||{};
   const k=n['energy-kcal_100g']??(n['energy_100g']?n['energy_100g']/4.184:null);
@@ -296,6 +296,13 @@ function norm(p){
   const nm=p.product_name+(p.brands?' ('+p.brands.split(',')[0]+')':'');
   const sq=parseFloat(p.serving_quantity),sz=(p.serving_size||'').trim();
   const pt=sq>0?[{n:/^[\d.,\s]*(g|ml|gr)?$/i.test(sz)?'Portion':sz,g:sq}]:[];
+  // Packungsgröße aus "quantity": "75 g", "0,5 l", "6 x 25 g" → Packung / Stück
+  const qm=String(p.quantity||'').toLowerCase().replace(',','.').match(/^\s*(?:(\d+)\s*[x×]\s*)?(\d+(?:\.\d+)?)\s*(kg|g|gr|l|ml|cl)\b/);
+  if(qm){
+    const f={kg:1000,g:1,gr:1,l:1000,ml:1,cl:10}[qm[3]],one=+qm[2]*f,cnt=+qm[1]||1,tot=one*cnt;
+    if(cnt>1&&one>0&&!pt.some(x=>x.g===one))pt.push({n:'1 Stück',g:Math.round(one*10)/10});
+    if(tot>0&&tot<=5000&&!pt.some(x=>x.g===tot))pt.push({n:'Packung',g:Math.round(tot*10)/10});
+  }
   return{key:p.code||nm.toLowerCase(),n:nm,k:+k,p:+n.proteins_100g||0,c:+n.carbohydrates_100g||0,f:+n.fat_100g||0,pt};
 }
 // Offline-Cache: alle gesehenen Produkte bleiben auf dem Handy (max. 500, älteste fliegen zuerst raus)
