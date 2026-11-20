@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <script>
-var VERSION=13;
+var VERSION=14;
 window.__live=0;
 (function(){try{
   var l=JSON.parse(localStorage.getItem('liveapp')||'null');
@@ -143,9 +143,21 @@ input[type=date]{min-height:44px}
       <div id="wchart"></div>
     </div>
     <div id="wstats"></div>
+    <div id="wprog"></div>
     <div class="card"><h2>Einträge</h2><div id="wlist"></div></div>
   </div>
 </div>
+
+<dialog id="pdlg">
+  <div class="row sp"><b>Annahmen für die Prognose</b><button class="x" id="pcl">×</button></div>
+  <div style="display:grid;gap:10px;margin-top:10px">
+    <label class="mu">Größe (cm)<input id="ph" type="text" inputmode="numeric" autocomplete="off" placeholder="z. B. 180"></label>
+    <label class="mu">Alter (Jahre)<input id="pa" type="text" inputmode="numeric" autocomplete="off" placeholder="35"></label>
+    <label class="mu">Aktivität im Alltag<select id="pact"></select></label>
+    <div class="mu" id="pm" style="font-size:12px">Berechnet wird der Verbrauch eines Mannes mit deiner Größe, deinem Alter und deinem aktuellen Gewicht (Mifflin-St Jeor).</div>
+    <button id="pok">Speichern</button>
+  </div>
+</dialog>
 
 <dialog id="sdlg">
   <div class="row sp"><b>Übersicht</b><button class="x" id="scl">×</button></div>
@@ -480,6 +492,42 @@ $('#beer').addEventListener('contextmenu',e=>e.preventDefault());
 $('#beer').onclick=()=>{if(lpDone){lpDone=false;return}addBeer(0.5)};
 $('#tundo').onclick=()=>{db.e=db.e.filter(x=>x.id!==lastBeer);save();render();$('#toast').hidden=true;clearTimeout(tt)};
 
+// Zielprognose: Grundumsatz (Mifflin-St Jeor, Mann) x Aktivität = TDEE; Gewicht und Verbrauch werden Tag für Tag fortgeschrieben
+const ACT=[[1.2,'Sitzend, kaum Sport'],[1.375,'Leicht aktiv (1–3× Sport pro Woche)'],[1.55,'Mäßig aktiv (3–5× Sport pro Woche)'],[1.725,'Sehr aktiv (6–7× Sport pro Woche)']];
+const PROF=()=>db.prof||(db.prof={h:0,age:35,act:1.375});
+const bmr=kg=>10*kg+6.25*PROF().h-5*PROF().age+5;
+$('#pact').innerHTML=ACT.map(a=>`<option value="${a[0]}">${a[1]}</option>`).join('');
+function openProf(){const P=PROF();$('#ph').value=P.h||'';$('#pa').value=P.age||35;$('#pact').value=String(P.act);$('#pm').textContent='Berechnet wird der Verbrauch eines Mannes mit deiner Größe, deinem Alter und deinem aktuellen Gewicht (Mifflin-St Jeor).';$('#pdlg').showModal()}
+$('#pcl').onclick=()=>$('#pdlg').close();
+$('#pok').onclick=()=>{
+  const h=parseFloat(String($('#ph').value).replace(',','.')),a=parseFloat(String($('#pa').value).replace(',','.'));
+  if(!(h>=120&&h<=230)||!(a>=15&&a<=100)){$('#pm').textContent='Bitte Größe (120–230 cm) und Alter (15–100 Jahre) angeben.';return}
+  db.prof={h,age:a,act:parseFloat($('#pact').value)};save();$('#pdlg').close();renderWeight();
+};
+function renderProg(all){
+  const el=$('#wprog'),P=PROF(),last=all[all.length-1];
+  if(!last){el.innerHTML='';return}
+  const head=`<div class="row sp"><h2 style="margin:0">Zielprognose</h2><button class="g" id="pedit">${P.h>0?'Annahmen':'Größe eintragen'}</button></div>`,msg=t=>{el.innerHTML=`<div class="card">${head}<div style="margin-top:8px">${t}</div></div>`;$('#pedit').onclick=openProf};
+  if(!(P.h>0))return msg('<span class="mu">Trage einmalig deine Größe ein, damit die App deinen Kalorienverbrauch (TDEE) berechnen kann.</span>');
+  const goal=db.wgoal;if(!(goal>0))return msg('<span class="mu">Lege oben rechts bei „Ziel“ ein Zielgewicht fest.</span>');
+  const t0=dayN(iso(new Date())),by={};
+  db.e.forEach(e=>{const n=dayN(e.d);if(n>t0-14&&n<=t0)by[e.d]=(by[e.d]||0)+e.k});
+  const ds=Object.values(by),n=ds.length;
+  if(n<3)return msg(`<span class="mu">Für die Prognose braucht die App mindestens 3 Tage mit Einträgen in den letzten 14 Tagen (aktuell ${n}).</span>`);
+  const avg=ds.reduce((a,b)=>a+b,0)/n,w0=last.kg,B=bmr(w0),tdee=B*P.act,bal=avg-tdee,dir=goal<w0?-1:1,diff=Math.abs(w0-goal);
+  const rows=`<div class="mu" style="margin-top:8px;line-height:1.7">Gewicht ${nf(w0)} kg · Größe ${P.h} cm · Alter ${P.age}<br>Grundumsatz: <b style="color:var(--tx)">${Math.round(B)} kcal</b> · Gesamtumsatz (TDEE): <b style="color:var(--tx)">${Math.round(tdee)} kcal</b><br>Ø Aufnahme: <b style="color:var(--tx)">${Math.round(avg)} kcal</b> (${n} Tage) · ${bal<0?'Defizit':'Überschuss'}: <b style="color:var(--tx)">${Math.abs(Math.round(bal))} kcal/Tag</b></div>`;
+  const foot='<div class="mu" style="margin-top:8px;font-size:12px">Schätzung: 7700 kcal entsprechen etwa 1 kg Körpergewicht, der Verbrauch sinkt mit dem Gewicht. Tage mit unvollständigen Einträgen verfälschen den Schnitt.</div>';
+  const out=(big,sub)=>{el.innerHTML=`<div class="card">${head}<div style="margin-top:10px"><div style="font-size:24px;font-weight:700">${big}</div><div class="mu">${sub}</div></div>${rows}${foot}</div>`;$('#pedit').onclick=openProf};
+  if(diff<0.05)return out('Ziel erreicht 🎉','Dein aktuelles Gewicht liegt am Zielgewicht.');
+  const eq=(avg/P.act-6.25*P.h+5*P.age-5)/10;
+  if(dir<0?eq>=goal:eq<=goal)return out('Mit diesem Schnitt nicht erreichbar',`Bei Ø ${Math.round(avg)} kcal pendelt sich dein Gewicht bei etwa ${nf(eq)} kg ein, weil der Verbrauch mit dem Gewicht sinkt. Für ${nf(goal)} kg musst du ${dir<0?'weniger':'mehr'} essen.`);
+  let w=w0,d=0;while(d<3650&&(dir<0?w>goal:w<goal)){w+=(avg-bmr(w)*P.act)/7700;d++}
+  const dt=new Date();dt.setDate(dt.getDate()+d);
+  const wk=d>=14?`ca. ${Math.round(d/7)} Wochen`:`${d} Tage`,mo=d>=60?` (≈ ${nf(d/30.4)} Monate)`:'';
+  let warn='';if(dir<0&&(avg<1500||-bal>1000))warn='<div style="margin-top:6px;color:var(--bad);font-size:13px">Hinweis: Das ist ein sehr starkes Defizit. Langsamer abzunehmen ist meist gesünder und leichter durchzuhalten.</div>';
+  out(wk+mo,`bis ${dt.toLocaleDateString('de-DE',{day:'numeric',month:'long',year:'numeric'})} · ${nf(diff)} kg ${dir<0?'abnehmen':'zunehmen'} (≈ ${nf(Math.abs(bal)*7/7700)} kg pro Woche am Anfang)`+warn);
+}
+
 // Gewicht: eigene Seite, ein manueller Wert pro Tag, Verlaufsgrafik mit 7-Tage-Trend
 db.w=db.w||[];let wr=90;
 const nf=v=>(Math.round(v*10)/10).toLocaleString('de-DE',{minimumFractionDigits:1,maximumFractionDigits:1});
@@ -519,6 +567,7 @@ function renderWeight(){
   $('#wstats').innerHTML=c?'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">'+c+'</div>':'';
   // Liste
   $('#wlist').innerHTML=all.length?all.slice().reverse().map(x=>`<div class="it"><div class="wedit" data-d="${x.d}" style="flex:1;cursor:pointer"><b>${nf(x.kg)} kg</b><div class="mu">${D(x.d).toLocaleDateString('de-DE',{weekday:'short',day:'numeric',month:'short',year:'numeric'})}</div></div><button class="x" data-wd="${x.d}">×</button></div>`).join('')+'<div class="mu" style="text-align:center;font-size:12px;margin-top:6px">Eintrag antippen zum Ändern</div>':'<div class="mu">Noch nichts eingetragen.</div>';
+  renderProg(all);
 }
 $('#wbtn').onclick=()=>{
   const all=db.w.slice().sort((a,b)=>a.d<b.d?-1:1);
@@ -563,7 +612,7 @@ $('#exp').onclick=async()=>{
 };
 $('#imp').onclick=()=>$('#file').click();
 $('#file').onchange=async e=>{
-  try{const j=JSON.parse(await e.target.files[0].text());if(Array.isArray(j.e)){db=j;db.items=db.items||{};db.w=db.w||[];save();render()}}catch(x){alert('Ungültige Datei')}
+  try{const j=JSON.parse(await e.target.files[0].text());if(Array.isArray(j.e)){db=j;db.items=db.items||{};db.w=db.w||[];db.prof=db.prof||{h:0,age:35,act:1.375};save();render()}}catch(x){alert('Ungültige Datei')}
 };
 
 // Live-Update: holt die neueste index.html aus dem GitHub-Repository und startet damit neu
