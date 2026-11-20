@@ -1,5 +1,11 @@
 [
  {
+  "v": 27,
+  "name": "2026.11.20.15",
+  "date": "2026-11-20",
+  "notes": "Kompakterer Tagesring (ca. 30 % niedriger), Fix beim APK-Bau (Versionsname)"
+ },
+ {
   "v": 26,
   "name": "2026.11.20.14",
   "date": "2026-11-20",

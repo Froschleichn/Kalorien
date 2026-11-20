@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <script>
-var VERSION=26;
-var VERSION_NAME='2026.11.20.14';
+var VERSION=27;
+var VERSION_NAME='2026.11.20.15';
 window.__live=0;
 (function(){try{
   var l=JSON.parse(localStorage.getItem('liveapp')||'null');
@@ -48,30 +48,30 @@ h2+.it{border-top:0}
 .empty{text-align:center;padding:26px 12px;color:var(--mu);line-height:1.45}
 .empty b{display:block;color:var(--tx);font-size:17px;margin-bottom:4px}
 /* Tagesring */
-.hero{background:var(--ink);color:#eaf6ee;border-radius:28px;padding:10px 16px 16px;margin-bottom:14px;box-shadow:0 10px 30px -14px #16201a99;--ringc:#7ae0a6}
+.hero{background:var(--ink);color:#eaf6ee;border-radius:24px;padding:8px 14px 12px;margin-bottom:12px;box-shadow:0 10px 30px -14px #16201a99;--ringc:#7ae0a6}
 .hero.over{--ringc:#ff7d68}
 .dn{display:flex;align-items:center;justify-content:space-between}
 .dn b{font-size:15px;font-weight:600;letter-spacing:.01em}
-.dn button{background:#ffffff14;color:#eaf6ee;border:0;width:40px;height:40px;padding:0;border-radius:50%;font-size:20px}
-.ringw{position:relative;width:min(206px,56vw);margin:0 auto;aspect-ratio:1}
+.dn button{background:#ffffff14;color:#eaf6ee;border:0;width:34px;height:34px;padding:0;border-radius:50%;font-size:18px;line-height:1}
+.ringw{position:relative;width:min(132px,38vw);margin:0 auto;aspect-ratio:1}
 .ringw svg{width:100%;height:100%;transform:rotate(-90deg);display:block}
 .ringw circle{fill:none;stroke-width:13;stroke-linecap:round}
 .rt{stroke:#ffffff17}.rp{stroke:var(--ringc);transition:stroke-dashoffset .7s cubic-bezier(.2,.8,.2,1),stroke .3s}
 .rc{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
-.rc .n{font-size:clamp(42px,13.5vw,52px);font-weight:700;line-height:1;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
-.rc .l{font-size:13px;color:#eaf6ecb0;margin-top:5px}
-.hs{display:flex;justify-content:center;gap:6px;font-size:13px;color:#eaf6ecb0;margin:4px 0 12px;font-variant-numeric:tabular-nums}
+.rc .n{font-size:clamp(27px,8.6vw,33px);font-weight:700;line-height:1;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+.rc .l{font-size:11.5px;color:#eaf6ecb0;margin-top:3px}
+.hs{display:flex;justify-content:center;gap:6px;font-size:13px;color:#eaf6ecb0;margin:2px 0 8px;font-variant-numeric:tabular-nums}
 .hs b{color:#eaf6ee;font-weight:600}
 .hs button{background:none;color:inherit;padding:0;border:0;font:inherit;text-decoration:underline;text-decoration-color:#ffffff40;text-underline-offset:3px}
-.mb{display:flex;height:8px;border-radius:5px;overflow:hidden;background:#ffffff17;gap:2px}
+.mb{display:flex;height:6px;border-radius:5px;overflow:hidden;background:#ffffff17;gap:2px}
 .mb i{display:block;min-width:0;transition:flex-grow .6s}
-.mt{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:11px}
-.mt div{font-size:12.5px;color:#eaf6ecb0;line-height:1.3}
-.mt b{display:block;font-size:20px;color:#eaf6ee;font-weight:650;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.mt{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px}
+.mt div{font-size:12px;color:#eaf6ecb0;line-height:1.3}
+.mt b{display:block;font-size:17px;color:#eaf6ee;font-weight:650;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
 .mt b small{font-size:12px;font-weight:500;color:#eaf6ecb0}
 .mt .pd{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px}
-.hb{display:flex;margin-top:12px}
-.hb button{flex:1;background:#ffffff12;color:#eaf6ee;padding:8px 0;font-size:14px;border-radius:12px}
+.hb{display:flex;margin-top:9px}
+.hb button{flex:1;background:#ffffff12;color:#eaf6ee;padding:6px 0;font-size:13px;border-radius:10px}
 .foot{display:flex;justify-content:center;gap:18px;margin-top:6px}
 .foot button{background:none;color:var(--mu);border:0;padding:8px 4px;font-size:14px}
 .fab{position:fixed;right:max(16px,calc(50% - 264px));bottom:20px;border-radius:30px;padding:15px 24px;font-weight:650;background:var(--fab);color:var(--fabtx);box-shadow:0 8px 22px -6px #16201a88}

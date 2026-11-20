@@ -37,7 +37,8 @@ jobs:
       - name: Versionsnummer hochzaehlen
         run: |
           sed -i "s/versionCode 1$/versionCode ${{ github.run_number }}/" android/app/build.gradle
-          VN=$(grep -o "VERSION_NAME='[^']*'" www/index.html | cut -d"'" -f2)
+          VN=$(sed -n "s/^var VERSION_NAME='\(.*\)';/\1/p" www/index.html | head -1)
+          echo "versionName: $VN"
           sed -i "s/versionName \"1.0\"/versionName \"$VN\"/" android/app/build.gradle
       - run: chmod +x gradlew && ./gradlew assembleDebug
         working-directory: android
