@@ -1,5 +1,11 @@
 [
  {
+  "v": 30,
+  "name": "2026.11.20.18",
+  "date": "2026-11-20",
+  "notes": "Barcode-Treffer öffnet direkt die Mengenauswahl"
+ },
+ {
   "v": 29,
   "name": "2026.11.20.17",
   "date": "2026-11-20",
