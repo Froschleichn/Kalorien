@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <script>
-var VERSION=2;
+var VERSION=3;
 (function(){try{
   var l=JSON.parse(localStorage.getItem('liveapp')||'null');
   if(l&&l.v>VERSION&&l.html){
@@ -76,8 +76,8 @@ video{width:100%;border-radius:10px;margin-top:8px}
   <video id="vid" playsinline muted hidden></video>
   <div id="res" class="mu" style="margin-top:8px"></div>
   <div id="pick" hidden>
-    <b id="pn"></b>
-    <div class="row" style="margin:8px 0"><input id="gr" type="number" inputmode="decimal" value="100"><span>g</span></div>
+    <div class="row sp"><b id="pn"></b><button class="x" id="pstar">☆</button></div>
+    <div class="row" style="margin:8px 0"><input id="gr" type="number" inputmode="decimal" step="any" value="100"><select id="un" style="width:auto;max-width:62%"></select></div>
     <div class="mu" id="pv"></div>
     <button id="ok" style="width:100%;margin-top:10px">Hinzufügen</button>
   </div>
@@ -108,7 +108,7 @@ video{width:100%;border-radius:10px;margin-top:8px}
 ;(function(){
 const $=s=>document.querySelector(s);
 let db;try{db=JSON.parse(localStorage.getItem('kt'))}catch(e){}
-db=db||{goal:2000,e:[]};db.del=db.del||[];db.gt=db.gt||0;
+db=db||{goal:2000,e:[]};db.del=db.del||[];db.gt=db.gt||0;db.items=db.items||{};
 const save=()=>{try{localStorage.setItem('kt',JSON.stringify(db))}catch(e){}};
 const iso=d=>{const z=new Date(d-d.getTimezoneOffset()*6e4);return z.toISOString().slice(0,10)};
 let day=iso(new Date()),cur=null,stream=null;
@@ -127,7 +127,7 @@ function render(){
   $('#list').innerHTML=MEALS.map(m=>{
     const x=es.filter(e=>e.m===m);if(!x.length)return'';
     return`<div class="card"><h2>${m} · ${Math.round(x.reduce((a,e)=>a+e.k,0))} kcal</h2>`+
-    x.map(e=>`<div class="it"><div class="edit" data-e="${e.id}" style="flex:1;cursor:pointer">${esc(e.n)}<div class="mu">${e.g?e.g+' g · ':''}${Math.round(e.k)} kcal</div></div><button class="x" data-id="${e.id}">×</button></div>`).join('')+'</div>';
+    x.map(e=>`<div class="it"><div class="edit" data-e="${e.id}" style="flex:1;cursor:pointer">${esc(e.n)}<div class="mu">${e.u?e.u+' = '+r(e.g)+' g · ':(e.g?e.g+' g · ':'')}${Math.round(e.k)} kcal</div></div><button class="x" data-id="${e.id}">×</button></div>`).join('')+'</div>';
   }).join('')+(es.length?'<div class="mu" style="text-align:center;font-size:12px">Eintrag antippen zum Bearbeiten</div>':'');
 }
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -139,16 +139,19 @@ $('#setg').onclick=()=>{const v=parseInt(prompt('Tagesziel (kcal):',db.goal));if
 
 function addEntry(o){db.e.push({id:Date.now().toString(36)+Math.random().toString(36).slice(2,6),d:day,m:$('#meal').value,...o});save();render();closeD()}
 function closeD(){stopScan();$('#dlg').close();$('#res').innerHTML='';$('#pick').hidden=true;$('#q').value=''}
-$('#add').onclick=()=>$('#dlg').showModal();
+$('#add').onclick=()=>{$('#dlg').showModal();showFav()};
 $('#cl').onclick=closeD;
 
 const OFF='https://world.openfoodfacts.org';
-const FIELDS='code,product_name,brands,nutriments';
+const FIELDS='code,product_name,brands,nutriments,serving_size,serving_quantity';
 function norm(p){
   const n=p.nutriments||{};
   const k=n['energy-kcal_100g']??(n['energy_100g']?n['energy_100g']/4.184:null);
   if(k==null||!p.product_name)return null;
-  return{n:p.product_name+(p.brands?' ('+p.brands.split(',')[0]+')':''),k:+k,p:+n.proteins_100g||0,c:+n.carbohydrates_100g||0,f:+n.fat_100g||0};
+  const nm=p.product_name+(p.brands?' ('+p.brands.split(',')[0]+')':'');
+  const sq=parseFloat(p.serving_quantity),sz=(p.serving_size||'').trim();
+  const pt=sq>0?[{n:/^[\d.,\s]*(g|ml|gr)?$/i.test(sz)?'Portion':sz,g:sq}]:[];
+  return{key:p.code||nm.toLowerCase(),n:nm,k:+k,p:+n.proteins_100g||0,c:+n.carbohydrates_100g||0,f:+n.fat_100g||0,pt};
 }
 async function search(){
   const q=$('#q').value.trim();if(!q)return;
@@ -168,13 +171,61 @@ async function search(){
   }catch(e){$('#res').textContent='Fehler: keine Verbindung zu Open Food Facts.'}
 }
 $('#go').onclick=search;$('#q').onkeydown=e=>{if(e.key==='Enter')search()};
+// Häufig verwendete Artikel und Portionen
+let pts=[],sel='g';
+const ug=()=>sel==='g'?1:pts[+sel].g;
+const ptLabel=x=>/\bg\b|ml/i.test(x.n)?x.n:`${x.n} (${r(x.g)} g)`;
+function ensureItem(it){return db.items[it.key]||(db.items[it.key]={n:it.n,k:it.k,p:it.p,c:it.c,f:it.f,pt:[],u:0,t:0,fav:false})}
+function showFav(){
+  const l=Object.entries(db.items).filter(([k,x])=>x.fav||x.u>0)
+    .sort((a,b)=>(b[1].fav-a[1].fav)||(b[1].u-a[1].u)||(b[1].t-a[1].t)).slice(0,12).map(([k,x])=>({key:k,...x}));
+  window._r=l;
+  $('#res').innerHTML=l.length?'<div class="mu" style="margin:4px 0">Häufig verwendet</div>'+l.map((x,i)=>`<div class="row" style="border-top:1px solid var(--ln)"><div class="res" data-i="${i}" style="flex:1;border:0;color:var(--tx)">${x.fav?'★ ':''}${esc(x.n)}<div class="mu">${Math.round(x.k)} kcal / 100 g${x.u?' · '+x.u+'×':''}</div></div><button class="x" data-rm="${esc(x.key)}">×</button></div>`).join(''):'';
+}
+function fillUnits(s){
+  $('#un').innerHTML='<option value="g">g</option>'+pts.map((x,i)=>`<option value="${i}">${esc(ptLabel(x))}</option>`).join('')+'<option value="+">+ Eigene Portion …</option>';
+  $('#un').value=String(s);sel=$('#un').value;
+}
+function openPick(it){
+  cur=it;const st=db.items[it.key];
+  pts=[...(it.pt||[]),...((st&&st.pt)||[])].filter((x,i,a)=>a.findIndex(y=>y.n===x.n&&y.g===x.g)===i);
+  const li=st&&st.lu&&st.lu!=='g'?pts.findIndex(x=>x.n+'|'+x.g===st.lu):-1;
+  fillUnits(li>=0?li:'g');
+  $('#gr').value=li>=0?(st.lq||1):(st&&st.lu==='g'&&st.lq?st.lq:100);
+  $('#pn').textContent=it.n;$('#pstar').textContent=st&&st.fav?'★':'☆';
+  $('#pick').hidden=false;$('#res').innerHTML='';upd();
+}
 $('#res').onclick=e=>{
+  const rm=e.target.dataset.rm;
+  if(rm){delete db.items[rm];save();showFav();return}
   const el=e.target.closest('.res');if(!el)return;
-  cur=window._r[el.dataset.i];$('#pn').textContent=cur.n;$('#pick').hidden=false;$('#res').innerHTML='';upd();
+  openPick(window._r[el.dataset.i]);
 };
-function upd(){const g=+$('#gr').value||0,f=g/100;$('#pv').textContent=`${Math.round(cur.k*f)} kcal · E ${r(cur.p*f)} g · KH ${r(cur.c*f)} g · F ${r(cur.f*f)} g`}
+function upd(){
+  const g=(+$('#gr').value||0)*ug(),f=g/100;
+  $('#pv').textContent=(sel==='g'?'':`= ${r(g)} g · `)+`${Math.round(cur.k*f)} kcal · E ${r(cur.p*f)} g · KH ${r(cur.c*f)} g · F ${r(cur.f*f)} g`;
+}
 $('#gr').oninput=upd;
-$('#ok').onclick=()=>{const g=+$('#gr').value;if(!g)return;const f=g/100;addEntry({n:cur.n,g,k:cur.k*f,p:cur.p*f,c:cur.c*f,f:cur.f*f})};
+$('#un').onchange=()=>{
+  const v=$('#un').value,prevG=(+$('#gr').value||0)*ug();
+  if(v==='+'){
+    const n=(prompt('Name der Portion (z. B. 1 Scheibe):','')||'').trim();
+    const g=parseFloat((prompt('Gewicht einer Portion in g:','')||'').replace(',','.'));
+    if(!n||!(g>0)){$('#un').value=sel;return}
+    pts.push({n,g});const st=ensureItem(cur);st.pt=(st.pt||[]).concat({n,g});save();
+    fillUnits(pts.length-1);$('#gr').value=1;
+  }else{
+    sel=v;$('#gr').value=v==='g'?r(prevG):1;
+  }
+  upd();
+};
+$('#pstar').onclick=()=>{const st=ensureItem(cur);st.fav=!st.fav;$('#pstar').textContent=st.fav?'★':'☆';save()};
+$('#ok').onclick=()=>{
+  const q=+$('#gr').value;if(!(q>0))return;
+  const g=q*ug(),f=g/100,pt=sel==='g'?null:pts[+sel],st=ensureItem(cur);
+  Object.assign(st,{n:cur.n,k:cur.k,p:cur.p,c:cur.c,f:cur.f,pt:pts.slice(),u:st.u+1,t:Date.now(),lu:pt?pt.n+'|'+pt.g:'g',lq:q});
+  addEntry({n:cur.n,g:r(g),u:pt?`${r(q)} × ${pt.n}`:'',k:cur.k*f,p:cur.p*f,c:cur.c*f,f:cur.f*f});
+};
 $('#mok').onclick=()=>{
   const k=+$('#mk').value;if(!k)return;
   addEntry({n:$('#mn').value||'Eintrag',g:0,k,p:+$('#mp').value||0,c:+$('#mc').value||0,f:+$('#mf').value||0});
@@ -246,6 +297,7 @@ $('#ecl').onclick=()=>$('#edlg').close();
 $('#eok').onclick=()=>{
   const k=parseFloat($('#ek').value),d=$('#edate').value;
   if(!(k>=0)||!d){$('#eh').textContent='Bitte kcal und Datum angeben.';return}
+  if((+$('#eg').value||0)!==orig.g)ent.u='';
   Object.assign(ent,{n:$('#en').value.trim()||'Eintrag',m:$('#em').value,d,g:+$('#eg').value||0,k,
     p:+$('#ep').value||0,c:+$('#ec').value||0,f:+$('#ef').value||0});
   save();render();$('#edlg').close();
@@ -265,7 +317,7 @@ $('#exp').onclick=async()=>{
 };
 $('#imp').onclick=()=>$('#file').click();
 $('#file').onchange=async e=>{
-  try{const j=JSON.parse(await e.target.files[0].text());if(Array.isArray(j.e)){db=j;save();render()}}catch(x){alert('Ungültige Datei')}
+  try{const j=JSON.parse(await e.target.files[0].text());if(Array.isArray(j.e)){db=j;db.items=db.items||{};save();render()}}catch(x){alert('Ungültige Datei')}
 };
 
 // Live-Update: holt die neueste index.html aus dem GitHub-Repository und startet damit neu
