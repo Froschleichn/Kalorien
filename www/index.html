@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <script>
-var VERSION=32;
-var VERSION_NAME='2026.11.20.20';
+var VERSION=33;
+var VERSION_NAME='2026.11.20.21';
 window.__live=0;
 (function(){try{
   var l=JSON.parse(localStorage.getItem('liveapp')||'null');
@@ -116,9 +116,9 @@ input[type=date]{min-height:44px}
   </div>
 </div>
 <div class="mt">
-  <div class="t"><small>Eiweiß</small><b><span id="p">0</span> <em>g</em></b><i><s id="bp" style="background:var(--c1);width:0"></s></i></div>
-  <div class="t"><small>Kohlenhydrate</small><b><span id="c">0</span> <em>g</em></b><i><s id="bc" style="background:var(--c2);width:0"></s></i></div>
-  <div class="t"><small>Fett</small><b><span id="f">0</span> <em>g</em></b><i><s id="bf" style="background:var(--c3);width:0"></s></i></div>
+  <div class="t"><small>Eiweiß</small><b><span id="p">0</span> <em id="pg">g</em></b><i><s id="bp" style="background:var(--c1);width:0"></s></i></div>
+  <div class="t"><small>Kohlenhydrate</small><b><span id="c">0</span> <em id="cg">g</em></b><i><s id="bc" style="background:var(--c2);width:0"></s></i></div>
+  <div class="t"><small>Fett</small><b><span id="f">0</span> <em id="fg">g</em></b><i><s id="bf" style="background:var(--c3);width:0"></s></i></div>
 </div>
 
 <div id="list"></div>
@@ -251,6 +251,12 @@ let day=iso(new Date()),cur=null,stream=null;
 const r=n=>Math.round(n*10)/10;
 const MEALS=['Frühstück','Mittagessen','Abendessen','Snacks'];
 
+// Tagesziele für die Makros aus dem Kalorienziel und dem letzten Gewicht: Eiweiß 1,8 g/kg, Fett 30 % der Energie, Rest Kohlenhydrate
+function macroGoals(){
+  const w=[...db.w].sort((a,b)=>a.d<b.d?-1:1),kg=w.length?w[w.length-1].kg:0,G=db.goal;
+  const f=Math.round(G*.3/9),p=Math.round(kg>0?Math.min(1.8*kg,G*.4/4):G*.25/4);
+  return{p,f,c:Math.max(0,Math.round((G-4*p-9*f)/4))};
+}
 function render(){
   const es=db.e.filter(e=>e.d===day);
   const s=k=>es.reduce((a,e)=>a+e[k],0);
@@ -262,8 +268,11 @@ function render(){
   $('#hero').classList.toggle('over',over);
   $('#rem').textContent=Math.abs(rem);$('#reml').textContent=over?'kcal drüber':'kcal übrig';
   $('#ring').style.strokeDashoffset=540.35*(1-Math.min(1,Math.max(0,t/db.goal)));
-  const ke=[P*4,C*4,F*9],kt=ke[0]+ke[1]+ke[2];
-  ['bp','bc','bf'].forEach((id,i)=>$('#'+id).style.width=(kt>0?Math.round(ke[i]/kt*100):0)+'%');
+  const mg=macroGoals();
+  [['p',P,mg.p],['c',C,mg.c],['f',F,mg.f]].forEach(([k,v,g])=>{
+    $('#'+k+'g').textContent='/ '+g+' g';
+    $('#b'+k).style.width=(g>0?Math.min(100,Math.round(v/g*100)):0)+'%';
+  });
   const today=day===iso(new Date());
   $('#dl').textContent=today?'Heute':new Date(day).toLocaleDateString('de-DE',{weekday:'long'});
   $('#dsub').textContent=new Date(day).toLocaleDateString('de-DE',{weekday:'short',day:'numeric',month:'long'});
@@ -848,7 +857,7 @@ function askText(){
   const when=day===iso(new Date())?'Heute':new Date(day).toLocaleDateString('de-DE',{weekday:'long',day:'numeric',month:'long'});
   const lines=MEALS.map(m=>{const x=es.filter(e=>e.m===m);return x.length?`${m}: `+x.map(e=>`${e.n} (${Math.round(e.k)} kcal, ${r(e.p)} g Eiweiß, ${r(e.c)} g KH, ${r(e.f)} g Fett${e.g?', '+r(e.g)+' g':''})`).join('; '):''}).filter(Boolean);
   return `Ich tracke meine Ernährung. ${when} habe ich bisher gegessen:\n`+(lines.length?lines.join('\n'):'noch nichts')+
-  `\n\nSumme bisher: ${t} kcal, ${Math.round(S('p'))} g Eiweiß, ${Math.round(S('c'))} g Kohlenhydrate, ${Math.round(S('f'))} g Fett.\nTagesziel: ${db.goal} kcal – ${rem>=0?`es bleiben noch ${rem} kcal`:`ich bin schon ${-rem} kcal drüber`}.`+
+  `\n\nSumme bisher: ${t} kcal, ${Math.round(S('p'))} g Eiweiß, ${Math.round(S('c'))} g Kohlenhydrate, ${Math.round(S('f'))} g Fett.\nTagesziel: ${db.goal} kcal (Richtwerte: ca. ${macroGoals().p} g Eiweiß, ${macroGoals().c} g Kohlenhydrate, ${macroGoals().f} g Fett) – ${rem>=0?`es bleiben noch ${rem} kcal`:`ich bin schon ${-rem} kcal drüber`}.`+
   (lw?`\nAktuelles Gewicht: ${String(lw.kg).replace('.',',')} kg`+(db.wgoal?`, Zielgewicht: ${String(db.wgoal).replace('.',',')} kg`:'')+'.':'')+
   `\n\nSchlage mir 3 konkrete Ideen für ${meal==='Snack'?'einen Snack':'das '+meal} vor. Gleiche aus, was mir heute an Nährstoffen fehlt (z. B. mehr Eiweiß, falls ich bisher wenig hatte), und bleib dabei unter meinem Tagesziel. Gib pro Idee die Zutaten mit Mengen in Gramm sowie kcal, Eiweiß, Kohlenhydrate und Fett an. Nur Zutaten aus dem normalen deutschen Supermarkt.`+(wish?`\nWünsche: ${wish}`:'');
 }
