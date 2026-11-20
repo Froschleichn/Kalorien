@@ -1,5 +1,11 @@
 [
  {
+  "v": 25,
+  "name": "2026.11.20.13",
+  "date": "2026-11-20",
+  "notes": "Neues Design: Tagesring, Makro-Verteilung, ruhigere Liste, Reiter als Schalter"
+ },
+ {
   "v": 24,
   "name": "2026.11.20.12",
   "date": "2026-11-20",

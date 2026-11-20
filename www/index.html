@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <script>
-var VERSION=24;
-var VERSION_NAME='2026.11.20.12';
+var VERSION=25;
+var VERSION_NAME='2026.11.20.13';
 window.__live=0;
 (function(){try{
   var l=JSON.parse(localStorage.getItem('liveapp')||'null');
@@ -18,28 +18,63 @@ window.__live=0;
 }catch(e){}})();
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#2f855a">
+<meta name="theme-color" content="#16201a">
 <title>Kalorien</title>
 <style>
-:root{--bg:#f6f7f6;--card:#fff;--tx:#1b1f1c;--mu:#6b746d;--ac:#2f855a;--ln:#e2e6e3;--bad:#c53030}
-@media(prefers-color-scheme:dark){:root{--bg:#121513;--card:#1c211e;--tx:#eaeeea;--mu:#8e9a91;--ac:#48bb78;--ln:#2a312c}}
+:root{--bg:#eef1ec;--card:#fff;--tx:#17201a;--mu:#6a766d;--ac:#27895a;--ln:#e1e6df;--bad:#d4513f;--ink:#16201a;--fab:#16201a;--fabtx:#eaf6ee;--seg:#dfe5dc;--segon:#fff;--sh:0 1px 2px #16201a14,0 6px 18px -8px #16201a22}
+@media(prefers-color-scheme:dark){:root{--bg:#0d120e;--card:#161e18;--tx:#e8efe9;--mu:#8a988d;--ac:#5ccf8e;--ln:#243027;--bad:#ef7a68;--fab:#5ccf8e;--fabtx:#0d1a12;--seg:#161e18;--sh:none;--ink:#1f2f25;--segon:#2b3d31}}
 *{box-sizing:border-box}
-body{margin:0;font:16px system-ui,sans-serif;background:var(--bg);color:var(--tx);max-width:560px;margin:auto;padding:68px 12px 90px}
-.card{background:var(--card);border:1px solid var(--ln);border-radius:14px;padding:14px;margin-bottom:12px}
-h2{font-size:13px;text-transform:uppercase;letter-spacing:.05em;color:var(--mu);margin:0 0 8px}
+body{margin:0;font:16px system-ui,sans-serif;background:var(--bg);color:var(--tx);max-width:560px;margin:auto;padding:70px 12px 130px}
+.card{background:var(--card);border-radius:20px;padding:14px 16px;margin-bottom:12px;box-shadow:var(--sh)}
+h2{font-size:15px;font-weight:650;color:var(--tx);margin:0 0 4px;display:flex;justify-content:space-between;align-items:baseline}
+h2 span{font-weight:500;font-size:14px;color:var(--mu);font-variant-numeric:tabular-nums}
 .row{display:flex;gap:8px;align-items:center}.sp{justify-content:space-between}
 button,input,select{font:inherit;color:inherit}
-button{background:var(--ac);color:#fff;border:0;border-radius:10px;padding:10px 14px;cursor:pointer}
+button{background:var(--ac);color:#fff;border:0;border-radius:12px;padding:10px 14px;cursor:pointer}
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--ac);outline-offset:2px}
 button.g{background:transparent;color:var(--mu);border:1px solid var(--ln)}
 input,select{background:var(--bg);border:1px solid var(--ln);border-radius:10px;padding:10px;width:100%}
 .big{font-size:34px;font-weight:700}.mu{color:var(--mu);font-size:14px}
 .bar{height:10px;background:var(--ln);border-radius:6px;overflow:hidden;margin:8px 0}
 .bar i{display:block;height:100%;background:var(--ac)}
 .bar.over i{background:var(--bad)}
-.it{display:flex;justify-content:space-between;gap:8px;padding:8px 0;border-top:1px solid var(--ln)}
-.it:first-of-type{border-top:0}
-.x{background:none;color:var(--mu);padding:0 6px;font-size:20px}
-.fab{position:fixed;right:max(16px,calc(50% - 264px));bottom:20px;border-radius:30px;padding:14px 22px;box-shadow:0 4px 14px #0004}
+.it{display:flex;align-items:center;gap:10px;padding:11px 0;border-top:1px solid var(--ln)}
+h2+.it{border-top:0}
+.it .nm{flex:1;min-width:0;cursor:pointer;line-height:1.25}
+.it .nm .mu{font-size:13px;margin-top:2px}
+.kc{font-variant-numeric:tabular-nums;font-weight:650;font-size:17px;text-align:right}
+.kc small{display:block;font-weight:500;font-size:11px;color:var(--mu);margin-top:-1px}
+.x{background:none;color:var(--mu);padding:0 4px;font-size:20px;opacity:.55}
+.empty{text-align:center;padding:26px 12px;color:var(--mu);line-height:1.45}
+.empty b{display:block;color:var(--tx);font-size:17px;margin-bottom:4px}
+/* Tagesring */
+.hero{background:var(--ink);color:#eaf6ee;border-radius:28px;padding:10px 16px 16px;margin-bottom:14px;box-shadow:0 10px 30px -14px #16201a99;--ringc:#7ae0a6}
+.hero.over{--ringc:#ff7d68}
+.dn{display:flex;align-items:center;justify-content:space-between}
+.dn b{font-size:15px;font-weight:600;letter-spacing:.01em}
+.dn button{background:#ffffff14;color:#eaf6ee;border:0;width:40px;height:40px;padding:0;border-radius:50%;font-size:20px}
+.ringw{position:relative;width:min(206px,56vw);margin:0 auto;aspect-ratio:1}
+.ringw svg{width:100%;height:100%;transform:rotate(-90deg);display:block}
+.ringw circle{fill:none;stroke-width:13;stroke-linecap:round}
+.rt{stroke:#ffffff17}.rp{stroke:var(--ringc);transition:stroke-dashoffset .7s cubic-bezier(.2,.8,.2,1),stroke .3s}
+.rc{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
+.rc .n{font-size:clamp(42px,13.5vw,52px);font-weight:700;line-height:1;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+.rc .l{font-size:13px;color:#eaf6ecb0;margin-top:5px}
+.hs{display:flex;justify-content:center;gap:6px;font-size:13px;color:#eaf6ecb0;margin:4px 0 12px;font-variant-numeric:tabular-nums}
+.hs b{color:#eaf6ee;font-weight:600}
+.hs button{background:none;color:inherit;padding:0;border:0;font:inherit;text-decoration:underline;text-decoration-color:#ffffff40;text-underline-offset:3px}
+.mb{display:flex;height:8px;border-radius:5px;overflow:hidden;background:#ffffff17;gap:2px}
+.mb i{display:block;min-width:0;transition:flex-grow .6s}
+.mt{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:11px}
+.mt div{font-size:12.5px;color:#eaf6ecb0;line-height:1.3}
+.mt b{display:block;font-size:20px;color:#eaf6ee;font-weight:650;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.mt b small{font-size:12px;font-weight:500;color:#eaf6ecb0}
+.mt .pd{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px}
+.hb{display:flex;margin-top:12px}
+.hb button{flex:1;background:#ffffff12;color:#eaf6ee;padding:8px 0;font-size:14px;border-radius:12px}
+.foot{display:flex;justify-content:center;gap:18px;margin-top:6px}
+.foot button{background:none;color:var(--mu);border:0;padding:8px 4px;font-size:14px}
+.fab{position:fixed;right:max(16px,calc(50% - 264px));bottom:20px;border-radius:30px;padding:15px 24px;font-weight:650;background:var(--fab);color:var(--fabtx);box-shadow:0 8px 22px -6px #16201a88}
 dialog{width:min(540px,96vw);border:0;border-radius:16px;padding:14px;background:var(--card);color:var(--tx);max-height:90vh}
 dialog::backdrop{background:#0008}
 .res{padding:10px 0;border-top:1px solid var(--ln);cursor:pointer}
@@ -53,10 +88,11 @@ video{width:100%;border-radius:10px;margin-top:8px}
 #toast{position:fixed;left:50%;transform:translateX(-50%);bottom:88px;background:#222;color:#fff;border-radius:12px;padding:10px 14px;display:flex;gap:14px;align-items:center;font-size:14px;box-shadow:0 4px 14px #0005;z-index:20;max-width:92vw}
 #toast[hidden]{display:none}
 #toast button{background:none;color:#8fd3a8;padding:0;font-weight:600}
-#tabs{position:fixed;top:0;left:0;right:0;z-index:11;background:var(--bg);border-bottom:1px solid var(--ln)}
-#tabs div{max-width:560px;margin:auto;display:flex;gap:8px;padding:8px 12px}
-#tabs button{flex:1;padding:11px 0;font-weight:600}
-#wpage{position:fixed;top:59px;left:0;right:0;bottom:0;z-index:10;background:var(--bg);overflow-y:auto;-webkit-overflow-scrolling:touch}
+#tabs{position:fixed;top:0;left:0;right:0;z-index:11;background:var(--bg)}
+#tabs div{max-width:560px;margin:8px auto;display:flex;gap:0;padding:4px;background:var(--seg);border-radius:16px;width:calc(100% - 24px)}
+#tabs button{flex:1;padding:10px 0;font-weight:600;border-radius:12px;background:var(--segon);color:var(--tx);border:0;box-shadow:var(--sh)}
+#tabs button.g{background:transparent;color:var(--mu);box-shadow:none}
+#wpage{position:fixed;top:62px;left:0;right:0;bottom:0;z-index:10;background:var(--bg);overflow-y:auto;-webkit-overflow-scrolling:touch}
 #wpage[hidden]{display:none}
 .wwrap{max-width:560px;margin:auto;padding:12px 12px 40px}
 input[type=date]{min-height:44px}
@@ -64,27 +100,30 @@ input[type=date]{min-height:44px}
 </head>
 <body>
 <div id="tabs"><div><button id="tabk">Kalorien</button><button id="tabw" class="g">Gewicht</button></div></div>
-<div class="row sp" style="margin-bottom:12px">
-  <button class="g" id="prev">‹</button>
-  <div style="text-align:center"><b id="dl"></b></div>
-  <button class="g" id="next">›</button>
-</div>
-
-<div class="card">
-  <div class="row sp" style="flex-wrap:wrap;gap:8px"><div><span class="big" id="tot">0</span> <span class="mu">/ <span id="goal"></span> kcal</span></div>
-  <div class="row" style="gap:6px"><button class="g" id="stat">Übersicht</button><button class="g" id="setg">Ziel</button></div></div>
-  <div class="bar" id="bar"><i></i></div>
-  <div class="m mu"><div><b id="p">0</b> g<br>Eiweiß</div><div><b id="c">0</b> g<br>Kohlenhydrate</div><div><b id="f">0</b> g<br>Fett</div></div>
+<div class="hero" id="hero">
+  <div class="dn"><button id="prev" aria-label="Vorheriger Tag">‹</button><b id="dl"></b><button id="next" aria-label="Nächster Tag">›</button></div>
+  <div class="ringw">
+    <svg viewBox="0 0 200 200" aria-hidden="true"><circle class="rt" cx="100" cy="100" r="86"/><circle class="rp" id="ring" cx="100" cy="100" r="86" stroke-dasharray="540.35" stroke-dashoffset="540.35"/></svg>
+    <div class="rc"><span class="n" id="rem">0</span><span class="l" id="reml">kcal übrig</span></div>
+  </div>
+  <div class="hs"><b><span id="tot">0</span></b> gegessen · Ziel <button id="setg"><span id="goal"></span> kcal</button></div>
+  <div class="mb" id="mb"><i style="flex-grow:1;background:#ffffff00"></i></div>
+  <div class="mt">
+    <div><b><span id="p">0</span><small> g</small></b><span class="pd" style="background:#ff8f73"></span>Eiweiß</div>
+    <div><b><span id="c">0</span><small> g</small></b><span class="pd" style="background:#f2c14e"></span>Kohlenhydrate</div>
+    <div><b><span id="f">0</span><small> g</small></b><span class="pd" style="background:#6fb8f0"></span>Fett</div>
+  </div>
+  <div class="hb"><button id="stat">Auswertung</button></div>
 </div>
 
 <div id="list"></div>
-<div class="row" style="justify-content:center;margin-top:8px">
-  <button class="g" id="exp">Export</button>
-  <button class="g" id="imp">Import</button>
+<div class="foot">
+  <button id="exp">Export</button>
+  <button id="imp">Import</button>
   <input type="file" id="file" accept=".json" hidden>
-  <button class="g" id="upd">Update</button>
+  <button id="upd">Update</button>
 </div>
-<div class="mu" style="text-align:center;font-size:12px;margin-top:8px"><span id="ver"></span> <span id="ust"></span> <a href="#" id="vsel" style="color:var(--ac)">· Versionen</a></div>
+<div class="mu" style="text-align:center;font-size:12px;margin-top:4px"><span id="ver"></span> <span id="ust"></span> <a href="#" id="vsel" style="color:var(--ac)">· Versionen</a></div>
 
 <button class="fab" id="add">+ Hinzufügen</button>
 <button class="beer" id="beer" aria-label="Bier hinzufügen: Tippen 0,5 l, lang drücken 1 l" title="Tippen: 0,5 l · Lang drücken: 1 l (Maß)">
@@ -206,15 +245,21 @@ function render(){
   const s=k=>es.reduce((a,e)=>a+e[k],0);
   const t=Math.round(s('k'));
   $('#tot').textContent=t;$('#goal').textContent=db.goal;
-  $('#p').textContent=Math.round(s('p'));$('#c').textContent=Math.round(s('c'));$('#f').textContent=Math.round(s('f'));
-  $('#bar').className='bar'+(t>db.goal?' over':'');
-  $('#bar i').style.width=Math.min(100,t/db.goal*100)+'%';
+  const P=Math.round(s('p')),C=Math.round(s('c')),F=Math.round(s('f'));
+  $('#p').textContent=P;$('#c').textContent=C;$('#f').textContent=F;
+  const rem=db.goal-t,over=rem<0;
+  $('#hero').classList.toggle('over',over);
+  $('#rem').textContent=Math.abs(rem);$('#reml').textContent=over?'kcal drüber':'kcal übrig';
+  $('#ring').style.strokeDashoffset=540.35*(1-Math.min(1,Math.max(0,t/db.goal)));
+  const ke=[P*4,C*4,F*9],kt=ke[0]+ke[1]+ke[2],col=['#ff8f73','#f2c14e','#6fb8f0'];
+  $('#mb').innerHTML=kt>0?ke.map((v,i)=>`<i style="flex-grow:${v};background:${col[i]}"></i>`).join(''):'<i style="flex-grow:1"></i>';
   $('#dl').textContent=day===iso(new Date())?'Heute':new Date(day).toLocaleDateString('de-DE',{weekday:'short',day:'numeric',month:'short'});
-  $('#list').innerHTML=MEALS.map(m=>{
+  const sub=e=>!e.u||e.u==='g'?(e.g?r(e.g)+' g':''):e.u==='ml'?r(e.g)+' ml':/\)\s*$/.test(e.u)?e.u:e.u+' · '+r(e.g)+' g';
+  $('#list').innerHTML=es.length?MEALS.map(m=>{
     const x=es.filter(e=>e.m===m);if(!x.length)return'';
-    return`<div class="card"><h2>${m} · ${Math.round(x.reduce((a,e)=>a+e.k,0))} kcal</h2>`+
-    x.map(e=>`<div class="it"><div class="edit" data-e="${e.id}" style="flex:1;cursor:pointer">${esc(e.n)}<div class="mu">${e.u?e.u+' = '+r(e.g)+' g · ':(e.g?e.g+' g · ':'')}${Math.round(e.k)} kcal</div></div><button class="x" data-id="${e.id}">×</button></div>`).join('')+'</div>';
-  }).join('')+(es.length?'<div class="mu" style="text-align:center;font-size:12px">Eintrag antippen zum Bearbeiten</div>':'');
+    return`<div class="card"><h2>${m}<span>${Math.round(x.reduce((a,e)=>a+e.k,0))} kcal</span></h2>`+
+    x.map(e=>`<div class="it"><div class="nm edit" data-e="${e.id}">${esc(e.n)}${sub(e)?`<div class="mu">${esc(sub(e))}</div>`:''}</div><div class="kc">${Math.round(e.k)}<small>kcal</small></div><button class="x" data-id="${e.id}" aria-label="Eintrag löschen">×</button></div>`).join('')+'</div>';
+  }).join(''):'<div class="card empty"><b>Noch nichts gegessen</b>Tippe unten auf Hinzufügen, um den ersten Eintrag zu machen. Einträge lassen sich antippen und bearbeiten.</div>';
 }
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const shift=n=>{const d=new Date(day);d.setDate(d.getDate()+n);day=iso(d);render()};
