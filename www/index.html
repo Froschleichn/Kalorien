@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <script>
-var VERSION=23;
-var VERSION_NAME='2026.11.20.11';
+var VERSION=24;
+var VERSION_NAME='2026.11.20.12';
 window.__live=0;
 (function(){try{
   var l=JSON.parse(localStorage.getItem('liveapp')||'null');
@@ -810,7 +810,11 @@ $('#vlist').onclick=async ev=>{
   if(v===VERSION)return;
   const repo=getRepo();st.textContent='Lade Version …';
   try{
-    const r=await applyVersion(repo,'v'+v,st);if(!r)return;
+    // Commit zur Version über die GitHub-API finden (Commit-Nachricht beginnt mit "v<N>:" bzw. "Version <N>:")
+    const cs=await(await fetch(`https://api.github.com/repos/${repo}/commits?path=www/index.html&per_page=60`)).json();
+    const c=(Array.isArray(cs)?cs:[]).find(x=>new RegExp('^(v|Version )'+v+':').test(x.commit.message));
+    if(!c){st.textContent='Commit zu dieser Version nicht gefunden.';return}
+    const r=await applyVersion(repo,c.sha,st);if(!r)return;
     localStorage.setItem('liveapp',JSON.stringify({v:r.v,html:r.html}));
     localStorage.setItem('kupdnote','Version '+r.nm+' geladen');localStorage.setItem('kupdexp',r.nm);
     location.reload();

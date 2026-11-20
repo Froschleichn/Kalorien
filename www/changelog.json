@@ -1,5 +1,11 @@
 [
  {
+  "v": 24,
+  "name": "2026.11.20.12",
+  "date": "2026-11-20",
+  "notes": "Rollback findet Versionen über die Commit-Liste"
+ },
+ {
   "v": 23,
   "name": "2026.11.20.11",
   "date": "2026-11-20",
