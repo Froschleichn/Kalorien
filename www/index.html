@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#2f855a">
+<title>Kalorien</title>
+<style>
+:root{--bg:#f6f7f6;--card:#fff;--tx:#1b1f1c;--mu:#6b746d;--ac:#2f855a;--ln:#e2e6e3;--bad:#c53030}
+@media(prefers-color-scheme:dark){:root{--bg:#121513;--card:#1c211e;--tx:#eaeeea;--mu:#8e9a91;--ac:#48bb78;--ln:#2a312c}}
+*{box-sizing:border-box}
+body{margin:0;font:16px system-ui,sans-serif;background:var(--bg);color:var(--tx);max-width:560px;margin:auto;padding:12px 12px 90px}
+.card{background:var(--card);border:1px solid var(--ln);border-radius:14px;padding:14px;margin-bottom:12px}
+h2{font-size:13px;text-transform:uppercase;letter-spacing:.05em;color:var(--mu);margin:0 0 8px}
+.row{display:flex;gap:8px;align-items:center}.sp{justify-content:space-between}
+button,input,select{font:inherit;color:inherit}
+button{background:var(--ac);color:#fff;border:0;border-radius:10px;padding:10px 14px;cursor:pointer}
+button.g{background:transparent;color:var(--mu);border:1px solid var(--ln)}
+input,select{background:var(--bg);border:1px solid var(--ln);border-radius:10px;padding:10px;width:100%}
+.big{font-size:34px;font-weight:700}.mu{color:var(--mu);font-size:14px}
+.bar{height:10px;background:var(--ln);border-radius:6px;overflow:hidden;margin:8px 0}
+.bar i{display:block;height:100%;background:var(--ac)}
+.bar.over i{background:var(--bad)}
+.it{display:flex;justify-content:space-between;gap:8px;padding:8px 0;border-top:1px solid var(--ln)}
+.it:first-of-type{border-top:0}
+.x{background:none;color:var(--mu);padding:0 6px;font-size:20px}
+.fab{position:fixed;right:max(16px,calc(50% - 264px));bottom:20px;border-radius:30px;padding:14px 22px;box-shadow:0 4px 14px #0004}
+dialog{width:min(540px,96vw);border:0;border-radius:16px;padding:14px;background:var(--card);color:var(--tx);max-height:90vh}
+dialog::backdrop{background:#0008}
+.res{padding:10px 0;border-top:1px solid var(--ln);cursor:pointer}
+video{width:100%;border-radius:10px;margin-top:8px}
+.m{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center}
+</style>
+</head>
+<body>
+<div class="row sp" style="margin-bottom:12px">
+  <button class="g" id="prev">‹</button>
+  <div style="text-align:center"><b id="dl"></b></div>
+  <button class="g" id="next">›</button>
+</div>
+
+<div class="card">
+  <div class="row sp"><div><span class="big" id="tot">0</span> <span class="mu">/ <span id="goal"></span> kcal</span></div>
+  <button class="g" id="setg">Ziel</button></div>
+  <div class="bar" id="bar"><i></i></div>
+  <div class="m mu"><div><b id="p">0</b> g<br>Eiweiß</div><div><b id="c">0</b> g<br>Kohlenhydrate</div><div><b id="f">0</b> g<br>Fett</div></div>
+</div>
+
+<div id="list"></div>
+<div class="row" style="justify-content:center;margin-top:8px">
+  <button class="g" id="exp">Export</button>
+  <button class="g" id="imp">Import</button>
+  <input type="file" id="file" accept=".json" hidden>
+</div>
+
+<button class="fab" id="add">+ Hinzufügen</button>
+
+<dialog id="dlg">
+  <div class="row sp"><b>Eintrag hinzufügen</b><button class="x" id="cl">×</button></div>
+  <div class="row" style="margin:10px 0">
+    <select id="meal"><option>Frühstück</option><option>Mittagessen</option><option>Abendessen</option><option>Snacks</option></select>
+  </div>
+  <div class="row"><input id="q" placeholder="Produkt oder Barcode suchen" enterkeyhint="search"><button id="go">Suche</button><button class="g" id="scan">📷</button></div>
+  <video id="vid" playsinline muted hidden></video>
+  <div id="res" class="mu" style="margin-top:8px"></div>
+  <div id="pick" hidden>
+    <b id="pn"></b>
+    <div class="row" style="margin:8px 0"><input id="gr" type="number" inputmode="decimal" value="100"><span>g</span></div>
+    <div class="mu" id="pv"></div>
+    <button id="ok" style="width:100%;margin-top:10px">Hinzufügen</button>
+  </div>
+  <details style="margin-top:12px"><summary class="mu">Manuell eintragen</summary>
+    <div style="display:grid;gap:8px;margin-top:8px">
+      <input id="mn" placeholder="Name">
+      <input id="mk" type="number" inputmode="decimal" placeholder="kcal gesamt">
+      <div class="row"><input id="mp" type="number" inputmode="decimal" placeholder="Eiweiß g"><input id="mc" type="number" inputmode="decimal" placeholder="KH g"><input id="mf" type="number" inputmode="decimal" placeholder="Fett g"></div>
+      <button id="mok">Hinzufügen</button>
+    </div>
+  </details>
+</dialog>
+
+<script>
+const $=s=>document.querySelector(s);
+let db;try{db=JSON.parse(localStorage.getItem('kt'))}catch(e){}
+db=db||{goal:2000,e:[]};db.del=db.del||[];db.gt=db.gt||0;
+const save=()=>{try{localStorage.setItem('kt',JSON.stringify(db))}catch(e){}};
+const iso=d=>{const z=new Date(d-d.getTimezoneOffset()*6e4);return z.toISOString().slice(0,10)};
+let day=iso(new Date()),cur=null,stream=null;
+const r=n=>Math.round(n*10)/10;
+const MEALS=['Frühstück','Mittagessen','Abendessen','Snacks'];
+
+function render(){
+  const es=db.e.filter(e=>e.d===day);
+  const s=k=>es.reduce((a,e)=>a+e[k],0);
+  const t=Math.round(s('k'));
+  $('#tot').textContent=t;$('#goal').textContent=db.goal;
+  $('#p').textContent=Math.round(s('p'));$('#c').textContent=Math.round(s('c'));$('#f').textContent=Math.round(s('f'));
+  $('#bar').className='bar'+(t>db.goal?' over':'');
+  $('#bar i').style.width=Math.min(100,t/db.goal*100)+'%';
+  $('#dl').textContent=day===iso(new Date())?'Heute':new Date(day).toLocaleDateString('de-DE',{weekday:'short',day:'numeric',month:'short'});
+  $('#list').innerHTML=MEALS.map(m=>{
+    const x=es.filter(e=>e.m===m);if(!x.length)return'';
+    return`<div class="card"><h2>${m} · ${Math.round(x.reduce((a,e)=>a+e.k,0))} kcal</h2>`+
+    x.map(e=>`<div class="it"><div>${esc(e.n)}<div class="mu">${e.g?e.g+' g · ':''}${Math.round(e.k)} kcal</div></div><button class="x" data-id="${e.id}">×</button></div>`).join('')+'</div>';
+  }).join('');
+}
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const shift=n=>{const d=new Date(day);d.setDate(d.getDate()+n);day=iso(d);render()};
+$('#prev').onclick=()=>shift(-1);$('#next').onclick=()=>shift(1);
+$('#list').onclick=e=>{const id=e.target.dataset.id;if(id){db.e=db.e.filter(x=>String(x.id)!==id);save();render()}};
+$('#setg').onclick=()=>{const v=parseInt(prompt('Tagesziel (kcal):',db.goal));if(v>0){db.goal=v;db.gt=Date.now();save();render()}};
+
+function addEntry(o){db.e.push({id:Date.now().toString(36)+Math.random().toString(36).slice(2,6),d:day,m:$('#meal').value,...o});save();render();closeD()}
+function closeD(){stopScan();$('#dlg').close();$('#res').innerHTML='';$('#pick').hidden=true;$('#q').value=''}
+$('#add').onclick=()=>$('#dlg').showModal();
+$('#cl').onclick=closeD;
+
+const OFF='https://world.openfoodfacts.org';
+const FIELDS='code,product_name,brands,nutriments';
+function norm(p){
+  const n=p.nutriments||{};
+  const k=n['energy-kcal_100g']??(n['energy_100g']?n['energy_100g']/4.184:null);
+  if(k==null||!p.product_name)return null;
+  return{n:p.product_name+(p.brands?' ('+p.brands.split(',')[0]+')':''),k:+k,p:+n.proteins_100g||0,c:+n.carbohydrates_100g||0,f:+n.fat_100g||0};
+}
+async function search(){
+  const q=$('#q').value.trim();if(!q)return;
+  $('#res').textContent='Suche …';$('#pick').hidden=true;
+  try{
+    let items;
+    if(/^\d{8,14}$/.test(q)){
+      const j=await(await fetch(`${OFF}/api/v2/product/${q}.json?fields=${FIELDS}`)).json();
+      items=j.product?[j.product]:[];
+    }else{
+      const j=await(await fetch(`${OFF}/cgi/search.pl?search_terms=${encodeURIComponent(q)}&search_simple=1&action=process&json=1&page_size=20&fields=${FIELDS}`)).json();
+      items=j.products||[];
+    }
+    const list=items.map(norm).filter(Boolean);
+    window._r=list;
+    $('#res').innerHTML=list.length?list.map((x,i)=>`<div class="res" data-i="${i}" style="color:var(--tx)">${esc(x.n)}<div class="mu">${Math.round(x.k)} kcal / 100 g</div></div>`).join(''):'Nichts gefunden. Du kannst unten manuell eintragen.';
+  }catch(e){$('#res').textContent='Fehler: keine Verbindung zu Open Food Facts.'}
+}
+$('#go').onclick=search;$('#q').onkeydown=e=>{if(e.key==='Enter')search()};
+$('#res').onclick=e=>{
+  const el=e.target.closest('.res');if(!el)return;
+  cur=window._r[el.dataset.i];$('#pn').textContent=cur.n;$('#pick').hidden=false;$('#res').innerHTML='';upd();
+};
+function upd(){const g=+$('#gr').value||0,f=g/100;$('#pv').textContent=`${Math.round(cur.k*f)} kcal · E ${r(cur.p*f)} g · KH ${r(cur.c*f)} g · F ${r(cur.f*f)} g`}
+$('#gr').oninput=upd;
+$('#ok').onclick=()=>{const g=+$('#gr').value;if(!g)return;const f=g/100;addEntry({n:cur.n,g,k:cur.k*f,p:cur.p*f,c:cur.c*f,f:cur.f*f})};
+$('#mok').onclick=()=>{
+  const k=+$('#mk').value;if(!k)return;
+  addEntry({n:$('#mn').value||'Eintrag',g:0,k,p:+$('#mp').value||0,c:+$('#mc').value||0,f:+$('#mf').value||0});
+  ['#mn','#mk','#mp','#mc','#mf'].forEach(s=>$(s).value='');
+};
+
+// Barcode-Scanner: nativ (BarcodeDetector, Chrome/Android) oder ZXing-Fallback (iPhone/Safari, Firefox)
+let zx=null,zxP=null;
+function loadZX(){return zxP||(zxP=new Promise((ok,no)=>{const e=document.createElement('script');e.src='zxing.min.js';e.onload=ok;e.onerror=no;document.head.appendChild(e)}))}
+if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia)$('#scan').hidden=true;
+function stopScan(){
+  if(zx){try{zx.reset()}catch(e){}zx=null}
+  if(stream){stream.getTracks().forEach(t=>t.stop());stream=null}
+  $('#vid').hidden=true;
+}
+function found(code){navigator.vibrate&&navigator.vibrate(80);$('#q').value=code;stopScan();search()}
+$('#scan').onclick=async()=>{
+  if(stream||zx)return stopScan();
+  const v=$('#vid'),cons={video:{facingMode:'environment',width:{ideal:1280},height:{ideal:720}}};
+  try{
+    if('BarcodeDetector' in window){
+      stream=await navigator.mediaDevices.getUserMedia(cons);
+      v.srcObject=stream;v.hidden=false;await v.play();
+      const det=new BarcodeDetector({formats:['ean_13','ean_8','upc_a','upc_e']});
+      const loop=async()=>{
+        if(!stream)return;
+        try{const b=await det.detect(v);if(b.length)return found(b[0].rawValue)}catch(e){}
+        setTimeout(loop,250);
+      };loop();
+    }else{
+      $('#res').textContent='Scanner wird geladen …';
+      await loadZX();
+      const Z=window.ZXing,h=new Map();
+      h.set(Z.DecodeHintType.POSSIBLE_FORMATS,[Z.BarcodeFormat.EAN_13,Z.BarcodeFormat.EAN_8,Z.BarcodeFormat.UPC_A,Z.BarcodeFormat.UPC_E]);
+      h.set(Z.DecodeHintType.TRY_HARDER,true);
+      zx=new Z.BrowserMultiFormatReader(h,200);
+      v.hidden=false;$('#res').textContent='';
+      zx.decodeFromConstraints(cons,v,r=>{if(r&&zx)found(r.getText())});
+    }
+  }catch(e){
+    stopScan();
+    const n=e&&e.name,m=!window.isSecureContext?'Seite nicht über HTTPS geöffnet.'
+      :n==='NotAllowedError'?'Kamera-Erlaubnis verweigert (in den Browser-/Website-Einstellungen erlauben).'
+      :n==='NotFoundError'?'Keine Kamera gefunden.'
+      :n==='NotReadableError'?'Kamera wird von einer anderen App benutzt.'
+      :(e&&e.type==='error')||!window.ZXing&&!('BarcodeDetector' in window)?'Scanner-Bibliothek (zxing.min.js) konnte nicht geladen werden – liegt die Datei neben index.html und läuft der neue Server?'
+      :'Fehler: '+(n||e);
+    $('#res').textContent=m;
+  }
+};
+
+// Export / Import
+$('#exp').onclick=async()=>{
+  const txt=JSON.stringify(db),name='kalorien-'+iso(new Date())+'.json',P=window.Capacitor&&window.Capacitor.Plugins;
+  if(P&&P.Filesystem&&P.Share){
+    try{
+      const w=await P.Filesystem.writeFile({path:name,data:txt,directory:'CACHE',encoding:'utf8'});
+      await P.Share.share({title:name,url:w.uri});return;
+    }catch(e){if(e&&/cancel/i.test(String(e.message)))return}
+  }
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([txt],{type:'application/json'}));a.download=name;a.click();
+};
+$('#imp').onclick=()=>$('#file').click();
+$('#file').onchange=async e=>{
+  try{const j=JSON.parse(await e.target.files[0].text());if(Array.isArray(j.e)){db=j;save();render()}}catch(x){alert('Ungültige Datei')}
+};
+render();
+</script>
+</body>
+</html>
