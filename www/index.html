@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <script>
-var VERSION=27;
-var VERSION_NAME='2026.11.20.15';
+var VERSION=28;
+var VERSION_NAME='2026.11.20.16';
 window.__live=0;
 (function(){try{
   var l=JSON.parse(localStorage.getItem('liveapp')||'null');
@@ -70,7 +70,7 @@ h2+.it{border-top:0}
 .mt b{display:block;font-size:17px;color:#eaf6ee;font-weight:650;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
 .mt b small{font-size:12px;font-weight:500;color:#eaf6ecb0}
 .mt .pd{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px}
-.hb{display:flex;margin-top:9px}
+.hb{display:flex;gap:8px;margin-top:9px}
 .hb button{flex:1;background:#ffffff12;color:#eaf6ee;padding:6px 0;font-size:13px;border-radius:10px}
 .foot{display:flex;justify-content:center;gap:18px;margin-top:6px}
 .foot button{background:none;color:var(--mu);border:0;padding:8px 4px;font-size:14px}
@@ -113,7 +113,7 @@ input[type=date]{min-height:44px}
     <div><b><span id="c">0</span><small> g</small></b><span class="pd" style="background:#f2c14e"></span>Kohlenhydrate</div>
     <div><b><span id="f">0</span><small> g</small></b><span class="pd" style="background:#6fb8f0"></span>Fett</div>
   </div>
-  <div class="hb"><button id="stat">Auswertung</button></div>
+  <div class="hb"><button id="stat">Auswertung</button><button id="ask">Essensvorschlag</button></div>
 </div>
 
 <div id="list"></div>
@@ -211,6 +211,20 @@ input[type=date]{min-height:44px}
     <div class="mu" id="pm" style="font-size:12px">Berechnet wird der Verbrauch eines Mannes mit deiner Größe, deinem Alter und deinem aktuellen Gewicht (Mifflin-St Jeor).</div>
     <button id="pok">Speichern</button>
   </div>
+</dialog>
+
+<dialog id="cdlg">
+  <div class="row sp"><b>Vorschlag von Claude</b><button class="x" id="ccl">×</button></div>
+  <div class="mu" style="font-size:13px;margin:6px 0 10px">Claude bekommt, was du heute gegessen hast, dein Ziel und die restlichen kcal, und schlägt passende Gerichte vor.</div>
+  <div class="row" style="margin-bottom:8px"><select id="cmeal"><option>Frühstück</option><option>Mittagessen</option><option>Abendessen</option><option>Snack</option></select></div>
+  <input id="cwish" placeholder="Wünsche, z. B. vegetarisch, schnell, ohne Backofen" autocomplete="off">
+  <textarea id="cprev" readonly rows="7" style="width:100%;margin-top:8px;font-size:12px;background:var(--bg);color:var(--mu);border:1px solid var(--ln);border-radius:10px;padding:8px;font-family:inherit"></textarea>
+  <div class="row" style="margin-top:10px;flex-wrap:wrap">
+    <button id="copen" style="flex:1 1 100%">In Claude öffnen</button>
+    <button class="g" id="cshare" style="flex:1">Teilen …</button>
+    <button class="g" id="ccopy" style="flex:1">Kopieren</button>
+  </div>
+  <div class="mu" id="cmsg" style="font-size:12px;margin-top:6px"></div>
 </dialog>
 
 <dialog id="vdlg">
@@ -850,6 +864,35 @@ $('#file').onchange=async e=>{
   try{const j=JSON.parse(await e.target.files[0].text());if(Array.isArray(j.e)){db=j;db.items=db.items||{};db.w=db.w||[];db.prof=db.prof||{h:0,age:35,act:1.375};save();render()}}catch(x){alert('Ungültige Datei')}
 };
 
+// Essensvorschlag: baut aus dem Tag eine Frage an Claude (öffnen, teilen oder kopieren)
+function askText(){
+  const es=db.e.filter(e=>e.d===day),S=k=>es.reduce((a,e)=>a+e[k],0),t=Math.round(S('k')),rem=db.goal-t;
+  const wl=[...db.w].sort((a,b)=>a.d<b.d?-1:1),lw=wl[wl.length-1];
+  const meal=$('#cmeal').value,wish=$('#cwish').value.trim();
+  const when=day===iso(new Date())?'Heute':new Date(day).toLocaleDateString('de-DE',{weekday:'long',day:'numeric',month:'long'});
+  const lines=MEALS.map(m=>{const x=es.filter(e=>e.m===m);return x.length?`${m}: `+x.map(e=>`${e.n} (${Math.round(e.k)} kcal, ${r(e.p)} g Eiweiß, ${r(e.c)} g KH, ${r(e.f)} g Fett${e.g?', '+r(e.g)+' g':''})`).join('; '):''}).filter(Boolean);
+  return `Ich tracke meine Ernährung. ${when} habe ich bisher gegessen:\n`+(lines.length?lines.join('\n'):'noch nichts')+
+  `\n\nSumme bisher: ${t} kcal, ${Math.round(S('p'))} g Eiweiß, ${Math.round(S('c'))} g Kohlenhydrate, ${Math.round(S('f'))} g Fett.\nTagesziel: ${db.goal} kcal – ${rem>=0?`es bleiben noch ${rem} kcal`:`ich bin schon ${-rem} kcal drüber`}.`+
+  (lw?`\nAktuelles Gewicht: ${String(lw.kg).replace('.',',')} kg`+(db.wgoal?`, Zielgewicht: ${String(db.wgoal).replace('.',',')} kg`:'')+'.':'')+
+  `\n\nSchlage mir 3 konkrete Ideen für ${meal==='Snack'?'einen Snack':'das '+meal} vor. Gleiche aus, was mir heute an Nährstoffen fehlt (z. B. mehr Eiweiß, falls ich bisher wenig hatte), und bleib dabei unter meinem Tagesziel. Gib pro Idee die Zutaten mit Mengen in Gramm sowie kcal, Eiweiß, Kohlenhydrate und Fett an. Nur Zutaten aus dem normalen deutschen Supermarkt.`+(wish?`\nWünsche: ${wish}`:'');
+}
+function askRefresh(){$('#cprev').value=askText();$('#cmsg').textContent=''}
+$('#ask').onclick=()=>{const hr=new Date().getHours();$('#cmeal').value=hr<10?'Frühstück':hr<14?'Mittagessen':hr<17?'Snack':'Abendessen';askRefresh();$('#cdlg').showModal()};
+$('#ccl').onclick=()=>$('#cdlg').close();
+$('#cmeal').onchange=askRefresh;$('#cwish').oninput=askRefresh;
+$('#copen').onclick=()=>{window.open('https://claude.ai/new?q='+encodeURIComponent(askText()),'_blank')};
+$('#ccopy').onclick=async()=>{
+  try{await navigator.clipboard.writeText(askText());$('#cmsg').textContent='Kopiert – in Claude einfügen.'}
+  catch(e){const t=$('#cprev');t.select();try{document.execCommand('copy');$('#cmsg').textContent='Kopiert – in Claude einfügen.'}catch(x){$('#cmsg').textContent='Text oben markieren und kopieren.'}}
+};
+$('#cshare').onclick=async()=>{
+  const P=window.Capacitor&&window.Capacitor.Plugins,tx=askText();
+  try{
+    if(P&&P.Share)await P.Share.share({text:tx,dialogTitle:'An Claude senden'});
+    else if(navigator.share)await navigator.share({text:tx});
+    else $('#cmsg').textContent='Teilen geht hier nicht – nimm „Kopieren“.';
+  }catch(e){}
+};
 // Live-Update: holt die neueste index.html aus dem GitHub-Repository und startet damit neu
 showVer();
 try{const n=localStorage.getItem('kupdnote'),x=localStorage.getItem('kupdexp');if(n){$('#ust').textContent='· '+(x&&x!==VERSION_NAME?'Version '+x+' ist älter als die installierte App und wird nicht verwendet (Eingebaute Version wählen).':n);localStorage.removeItem('kupdnote');localStorage.removeItem('kupdexp')}}catch(e){}
