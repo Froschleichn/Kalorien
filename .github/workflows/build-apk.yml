@@ -23,8 +23,23 @@ jobs:
           sed -i 's#</manifest>#    <uses-permission android:name="android.permission.CAMERA" />\n    <uses-feature android:name="android.hardware.camera" android:required="false" />\n</manifest>#' android/app/src/main/AndroidManifest.xml
           grep -n "CAMERA" android/app/src/main/AndroidManifest.xml
       - run: npx cap sync android
+      - name: Feste Signatur einrichten
+        env:
+          KEYSTORE_B64: ${{ secrets.KEYSTORE_B64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+        run: |
+          if [ -z "$KEYSTORE_B64" ] || [ -z "$KEYSTORE_PASSWORD" ]; then
+            echo "::warning::Secrets KEYSTORE_B64 und KEYSTORE_PASSWORD fehlen - APK bekommt einen zufaelligen Debug-Schluessel, Updates ueber die alte App sind dann nicht moeglich."
+            exit 0
+          fi
+          echo "$KEYSTORE_B64" | base64 -d > android/app/kalorien.keystore
+          python3 scripts/patch_signing.py
+      - name: Versionsnummer hochzaehlen
+        run: sed -i "s/versionCode 1$/versionCode ${{ github.run_number }}/" android/app/build.gradle
       - run: chmod +x gradlew && ./gradlew assembleDebug
         working-directory: android
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
       - uses: actions/upload-artifact@v4
         with:
           name: kalorien-apk
