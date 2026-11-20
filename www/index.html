@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <script>
-var VERSION=20;
+var VERSION=21;
 window.__live=0;
 (function(){try{
   var l=JSON.parse(localStorage.getItem('liveapp')||'null');
@@ -417,6 +417,38 @@ function stopScan(){
   $('#vid').hidden=true;
 }
 function found(code){navigator.vibrate&&navigator.vibrate(80);$('#q').value=code;stopScan();search()}
+// Foto-Scan: Tippen aufs Kamerabild löst ein Foto aus (Autofokus, volle Auflösung) und wertet es aus
+const HINT='Tipp: Aufs Kamerabild tippen, um ein Foto zu scannen – dann muss nichts ruhig gehalten werden.';
+const BCF=['ean_13','ean_8','upc_a','upc_e'];let snapBusy=false;
+async function decodeStill(src,w,h){
+  const sc=Math.min(1,1600/Math.max(w,h)),mk=rot=>{
+    const c=document.createElement('canvas'),W=Math.round(w*sc),H=Math.round(h*sc);
+    c.width=rot?H:W;c.height=rot?W:H;const x=c.getContext('2d');
+    if(rot){x.translate(H,0);x.rotate(Math.PI/2)}x.drawImage(src,0,0,W,H);return c};
+  const cs=[mk(0),mk(1)];
+  if('BarcodeDetector' in window){
+    const det=new BarcodeDetector({formats:BCF});
+    for(const c of cs){try{const b=await det.detect(c);if(b.length)return b[0].rawValue}catch(e){}}
+  }
+  await loadZX();const Z=window.ZXing,hn=new Map();
+  hn.set(Z.DecodeHintType.POSSIBLE_FORMATS,[Z.BarcodeFormat.EAN_13,Z.BarcodeFormat.EAN_8,Z.BarcodeFormat.UPC_A,Z.BarcodeFormat.UPC_E]);
+  hn.set(Z.DecodeHintType.TRY_HARDER,true);
+  const rd=new Z.MultiFormatReader();rd.setHints(hn);
+  for(const c of cs){try{return rd.decode(new Z.BinaryBitmap(new Z.HybridBinarizer(new Z.HTMLCanvasElementLuminanceSource(c)))).getText()}catch(e){}}
+  return null;
+}
+$('#vid').onclick=async()=>{
+  const v=$('#vid');if(snapBusy||v.hidden)return;snapBusy=true;
+  v.style.opacity='.4';setTimeout(()=>v.style.opacity='',180);navigator.vibrate&&navigator.vibrate(30);
+  $('#res').textContent='Foto wird ausgewertet …';
+  try{
+    const tr=v.srcObject&&v.srcObject.getVideoTracks()[0];let img=null,w=v.videoWidth,h=v.videoHeight;
+    if(window.ImageCapture&&tr){try{img=await createImageBitmap(await new ImageCapture(tr).takePhoto());w=img.width;h=img.height}catch(e){img=null}}
+    const code=await decodeStill(img||v,w,h);
+    if(code)found(code);else $('#res').textContent='Kein Barcode erkannt – näher ran, Barcode im Bild zentrieren und nochmal tippen.';
+  }catch(e){$('#res').textContent='Foto-Scan fehlgeschlagen ('+(e&&e.name||e)+') – nochmal tippen.'}
+  snapBusy=false;
+};
 $('#scan').onclick=async()=>{
   if(stream||zx)return stopScan();
   const v=$('#vid'),cons={video:{facingMode:'environment',width:{ideal:1280},height:{ideal:720}}};
@@ -424,6 +456,7 @@ $('#scan').onclick=async()=>{
     if('BarcodeDetector' in window){
       stream=await navigator.mediaDevices.getUserMedia(cons);
       v.srcObject=stream;v.hidden=false;await v.play();
+      $('#res').textContent=HINT;
       const det=new BarcodeDetector({formats:['ean_13','ean_8','upc_a','upc_e']});
       const loop=async()=>{
         if(!stream)return;
@@ -437,7 +470,7 @@ $('#scan').onclick=async()=>{
       h.set(Z.DecodeHintType.POSSIBLE_FORMATS,[Z.BarcodeFormat.EAN_13,Z.BarcodeFormat.EAN_8,Z.BarcodeFormat.UPC_A,Z.BarcodeFormat.UPC_E]);
       h.set(Z.DecodeHintType.TRY_HARDER,true);
       zx=new Z.BrowserMultiFormatReader(h,200);
-      v.hidden=false;$('#res').textContent='';
+      v.hidden=false;$('#res').textContent=HINT;
       zx.decodeFromConstraints(cons,v,r=>{if(r&&zx)found(r.getText())});
     }
   }catch(e){
