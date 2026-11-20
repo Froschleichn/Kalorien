@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <script>
-var VERSION=21;
+var VERSION=22;
 window.__live=0;
 (function(){try{
   var l=JSON.parse(localStorage.getItem('liveapp')||'null');
@@ -312,25 +312,31 @@ $('#q').oninput=()=>{
   if(l.length){$('#pick').hidden=true;renderRes(l,'Sofort-Treffer · „Suche“ tippen für Open Food Facts')}
   else $('#res').innerHTML='';
 };
+// Bei fehlender Verbindung mehrfach neu versuchen; erst nach 'ms' Millisekunden aufgeben (dann Offline-Hinweis)
+async function fetchRetry(url,ms){
+  const end=Date.now()+ms;let last;
+  while(true){
+    const left=end-Date.now();if(left<=0)throw last||new Error('timeout');
+    const ac=new AbortController(),to=setTimeout(()=>ac.abort(),Math.min(left,3000));
+    try{const res=await fetch(url,{signal:ac.signal});if(!res.ok)throw new Error('HTTP '+res.status);const j=await res.json();clearTimeout(to);return j}
+    catch(e){clearTimeout(to);last=e}
+    const w=Math.min(500,end-Date.now());if(w>0)await new Promise(r=>setTimeout(r,w));
+  }
+}
 async function search(){
   const q=$('#q').value.trim();if(!q)return;
   $('#res').textContent='Suche …';$('#pick').hidden=true;
   const isCode=/^\d{8,14}$/.test(q);let list,note='';
   if(isCode&&cache[q])list=[cache[q]];
   else{
-    const local=isCode?[]:quick(q),ac=new AbortController(),to=setTimeout(()=>ac.abort(),8000);
+    const local=isCode?[]:quick(q);
     try{
-      let items;
-      if(isCode){
-        const j=await(await fetch(`${OFF}/api/v2/product/${q}.json?fields=${FIELDS}`,{signal:ac.signal})).json();
-        items=j.product?[j.product]:[];
-      }else{
-        const j=await(await fetch(`${OFF}/cgi/search.pl?search_terms=${encodeURIComponent(q)}&search_simple=1&action=process&json=1&page_size=20&sort_by=unique_scans_n&fields=${FIELDS}`,{signal:ac.signal})).json();
-        items=j.products||[];
-      }
+      const url=isCode?`${OFF}/api/v2/product/${q}.json?fields=${FIELDS}`
+        :`${OFF}/cgi/search.pl?search_terms=${encodeURIComponent(q)}&search_simple=1&action=process&json=1&page_size=20&sort_by=unique_scans_n&fields=${FIELDS}`;
+      const j=await fetchRetry(url,5000);
+      const items=isCode?(j.product?[j.product]:[]):(j.products||[]);
       const off=items.map(norm).filter(Boolean);remember(off);list=local.concat(off);
     }catch(e){note='Offline – gespeicherte Produkte';list=isCode?localSearch(q):local.concat(localSearch(q).filter(x=>!String(x.key).startsWith('own:')))}
-    clearTimeout(to);
   }
   if(!list.length){window._r=[];$('#res').textContent=note?'Kein gespeichertes Produkt gefunden – ohne Netz bitte unten manuell eintragen.':'Nichts gefunden. Unten kannst du ein eigenes Produkt anlegen oder manuell eintragen.';return}
   renderRes(list,note);
