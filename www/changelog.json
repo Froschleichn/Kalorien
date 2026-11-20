@@ -1,5 +1,11 @@
 [
  {
+  "v": 32,
+  "name": "2026.11.20.20",
+  "date": "2026-11-20",
+  "notes": "Kompakteres Layout, Bier-Button entfernt"
+ },
+ {
   "v": 31,
   "name": "2026.11.20.19",
   "date": "2026-11-20",
