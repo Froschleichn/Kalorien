@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <script>
-var VERSION=30;
-var VERSION_NAME='2026.11.20.18';
+var VERSION=31;
+var VERSION_NAME='2026.11.20.19';
 window.__live=0;
 (function(){try{
   var l=JSON.parse(localStorage.getItem('liveapp')||'null');
@@ -18,11 +18,11 @@ window.__live=0;
 }catch(e){}})();
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#16201a">
+<meta name="theme-color" content="#eef0f6">
 <title>Kalorien</title>
 <style>
-:root{--bg:#eef1ec;--card:#fff;--tx:#17201a;--mu:#6a766d;--ac:#27895a;--ln:#e1e6df;--bad:#d4513f;--ink:#16201a;--fab:#16201a;--fabtx:#eaf6ee;--seg:#dfe5dc;--segon:#fff;--sh:0 1px 2px #16201a14,0 6px 18px -8px #16201a22}
-@media(prefers-color-scheme:dark){:root{--bg:#0d120e;--card:#161e18;--tx:#e8efe9;--mu:#8a988d;--ac:#5ccf8e;--ln:#243027;--bad:#ef7a68;--fab:#5ccf8e;--fabtx:#0d1a12;--seg:#161e18;--sh:none;--ink:#1f2f25;--segon:#2b3d31}}
+:root{--bg:#eef0f6;--card:#fff;--tx:#1d2233;--mu:#6b7390;--ac:#3f51d6;--acx:#fff;--ln:#e2e5ef;--bad:#e0553f;--fab:#1d2233;--fabtx:#fff;--seg:#e0e3ee;--segon:#fff;--sh:0 1px 2px #1d223312,0 6px 18px -10px #1d223330;--hero:#e1e6fb;--track:#fff;--c1:#ff7a5c;--c2:#f2b705;--c3:#3fa0e8}
+@media(prefers-color-scheme:dark){:root{--bg:#0e1019;--card:#171a27;--tx:#e9ecf6;--mu:#8d94b0;--ac:#8c9bff;--acx:#0e1019;--ln:#262a3d;--bad:#ff7d68;--fab:#8c9bff;--fabtx:#0e1019;--seg:#171a27;--segon:#2a3050;--sh:none;--hero:#1c2340;--track:#2b3358;--c1:#ff8f73;--c2:#f2c14e;--c3:#6fb8f0}}
 *{box-sizing:border-box}
 body{margin:0;font:16px system-ui,sans-serif;background:var(--bg);color:var(--tx);max-width:560px;margin:auto;padding:70px 12px 130px}
 .card{background:var(--card);border-radius:20px;padding:14px 16px;margin-bottom:12px;box-shadow:var(--sh)}
@@ -30,7 +30,7 @@ h2{font-size:15px;font-weight:650;color:var(--tx);margin:0 0 4px;display:flex;ju
 h2 span{font-weight:500;font-size:14px;color:var(--mu);font-variant-numeric:tabular-nums}
 .row{display:flex;gap:8px;align-items:center}.sp{justify-content:space-between}
 button,input,select{font:inherit;color:inherit}
-button{background:var(--ac);color:#fff;border:0;border-radius:12px;padding:10px 14px;cursor:pointer}
+button{background:var(--ac);color:var(--acx);border:0;border-radius:12px;padding:10px 14px;cursor:pointer}
 button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--ac);outline-offset:2px}
 button.g{background:transparent;color:var(--mu);border:1px solid var(--ln)}
 input,select{background:var(--bg);border:1px solid var(--ln);border-radius:10px;padding:10px;width:100%}
@@ -47,34 +47,46 @@ h2+.it{border-top:0}
 .x{background:none;color:var(--mu);padding:0 4px;font-size:20px;opacity:.55}
 .empty{text-align:center;padding:26px 12px;color:var(--mu);line-height:1.45}
 .empty b{display:block;color:var(--tx);font-size:17px;margin-bottom:4px}
-/* Tagesring */
-.hero{background:var(--ink);color:#eaf6ee;border-radius:24px;padding:8px 14px 12px;margin-bottom:12px;box-shadow:0 10px 30px -14px #16201a99;--ringc:#7ae0a6}
-.hero.over{--ringc:#ff7d68}
-.dn{display:flex;align-items:center;justify-content:space-between}
-.dn b{font-size:15px;font-weight:600;letter-spacing:.01em}
-.dn button{background:#ffffff14;color:#eaf6ee;border:0;width:34px;height:34px;padding:0;border-radius:50%;font-size:18px;line-height:1}
-.ringw{position:relative;width:min(132px,38vw);margin:0 auto;aspect-ratio:1}
+/* Kopf, Tagesring, Kacheln */
+.top{display:flex;justify-content:space-between;align-items:center;padding:6px 6px 10px}
+.top b{font-size:26px;font-weight:700;letter-spacing:-.02em;display:block;line-height:1.1}
+.top small{color:var(--mu);font-size:13px}
+.dn{display:flex;gap:6px}
+.dn button{background:var(--card);color:var(--tx);box-shadow:var(--sh);border:0;width:38px;height:38px;padding:0;border-radius:50%;font-size:19px;line-height:1}
+.hero{background:var(--hero);border-radius:26px;padding:16px 18px;margin-bottom:10px;display:flex;align-items:center;gap:20px;--ringc:var(--ac)}
+.hero.over{--ringc:var(--bad)}
+.ringw{position:relative;width:min(132px,36vw);flex:none;aspect-ratio:1}
 .ringw svg{width:100%;height:100%;transform:rotate(-90deg);display:block}
-.ringw circle{fill:none;stroke-width:13;stroke-linecap:round}
-.rt{stroke:#ffffff17}.rp{stroke:var(--ringc);transition:stroke-dashoffset .7s cubic-bezier(.2,.8,.2,1),stroke .3s}
+.ringw circle{fill:none;stroke-width:14;stroke-linecap:round}
+.rt{stroke:var(--track)}.rp{stroke:var(--ringc);transition:stroke-dashoffset .7s cubic-bezier(.2,.8,.2,1),stroke .3s}
 .rc{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
 .rc .n{font-size:clamp(27px,8.6vw,33px);font-weight:700;line-height:1;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
-.rc .l{font-size:11.5px;color:#eaf6ecb0;margin-top:3px}
-.hs{display:flex;justify-content:center;gap:6px;font-size:13px;color:#eaf6ecb0;margin:2px 0 8px;font-variant-numeric:tabular-nums}
-.hs b{color:#eaf6ee;font-weight:600}
-.hs button{background:none;color:inherit;padding:0;border:0;font:inherit;text-decoration:underline;text-decoration-color:#ffffff40;text-underline-offset:3px}
-.mb{display:flex;height:6px;border-radius:5px;overflow:hidden;background:#ffffff17;gap:2px}
-.mb i{display:block;min-width:0;transition:flex-grow .6s}
-.mt{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px}
-.mt div{font-size:12px;color:#eaf6ecb0;line-height:1.3}
-.mt b{display:block;font-size:17px;color:#eaf6ee;font-weight:650;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
-.mt b small{font-size:12px;font-weight:500;color:#eaf6ecb0}
-.mt .pd{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px}
-.hb{display:flex;gap:8px;margin-top:9px}
-.hb button{flex:1;background:#ffffff12;color:#eaf6ee;padding:6px 0;font-size:13px;border-radius:10px}
+.rc .l{font-size:11.5px;color:var(--mu);margin-top:3px}
+.hi{display:flex;flex-direction:column;gap:12px;font-variant-numeric:tabular-nums}
+.hi small{display:block;font-size:12.5px;color:var(--mu)}
+.hi b{font-size:20px;font-weight:650}
+.hi button{background:none;color:var(--tx);padding:0;border:0;font:inherit;font-weight:650;font-size:20px;text-decoration:underline;text-decoration-color:var(--mu);text-decoration-thickness:1px;text-underline-offset:4px}
+.mt{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
+.mt .t{background:var(--card);border-radius:20px;padding:12px 13px;box-shadow:var(--sh)}
+.mt small{display:block;font-size:12px;color:var(--mu)}
+.mt b{display:block;font-size:20px;font-weight:650;letter-spacing:-.01em;font-variant-numeric:tabular-nums;margin-top:1px}
+.mt b em{font-style:normal;font-size:13px;font-weight:500;color:var(--mu)}
+.mt i{display:block;height:5px;border-radius:3px;background:var(--ln);margin-top:9px;overflow:hidden}
+.mt i s{display:block;height:100%;border-radius:3px;transition:width .6s}
+.meal .mh{display:flex;align-items:center;gap:12px;padding-bottom:4px}
+.mi{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;font-size:19px;flex:none}
+.meal .mh .mx{flex:1;font-weight:650;font-size:16px}
+.meal .mh .mx span{display:block;font-weight:400;font-size:12.5px;color:var(--mu)}
+.meal .mh b{font-variant-numeric:tabular-nums;font-size:16px}
+.meal .it{padding:9px 0 9px 50px}
+.addm{display:flex;align-items:center;gap:12px;border:1.5px dashed var(--ln);border-radius:20px;padding:12px 16px;margin-bottom:12px;color:var(--mu);cursor:pointer}
+.addm .mx{flex:1}.addm .mx b{display:block;color:var(--tx);font-weight:600;font-size:16px}.addm .mx span{font-size:12.5px}
+.addm .pl{font-size:22px}
+.sug{display:block;width:100%;background:var(--card);color:var(--tx);box-shadow:var(--sh);border-radius:18px;padding:13px;font-weight:600;margin:2px 0 8px}
 .foot{display:flex;justify-content:center;gap:18px;margin-top:6px}
+#wpage button{white-space:nowrap}
 .foot button{background:none;color:var(--mu);border:0;padding:8px 4px;font-size:14px}
-.fab{position:fixed;right:max(16px,calc(50% - 264px));bottom:20px;border-radius:30px;padding:15px 24px;font-weight:650;background:var(--fab);color:var(--fabtx);box-shadow:0 8px 22px -6px #16201a88}
+.fab{position:fixed;left:calc(max(16px,50% - 264px) + 64px);right:max(16px,calc(50% - 264px));bottom:20px;height:54px;border-radius:18px;padding:0 20px;font-weight:650;background:var(--fab);color:var(--fabtx);box-shadow:0 8px 22px -8px #1d223399}
 dialog{width:min(540px,96vw);border:0;border-radius:16px;padding:14px;background:var(--card);color:var(--tx);max-height:90vh}
 dialog::backdrop{background:#0008}
 .res{padding:10px 0;border-top:1px solid var(--ln);cursor:pointer}
@@ -99,24 +111,26 @@ input[type=date]{min-height:44px}
 </style>
 </head>
 <body>
-<div id="tabs"><div><button id="tabk">Kalorien</button><button id="tabw" class="g">Gewicht</button></div></div>
+<div id="tabs"><div><button id="tabk">Kalorien</button><button id="tabw" class="g">Gewicht</button><button id="stat" class="g">Verlauf</button></div></div>
+<div class="top"><div><b id="dl"></b><small id="dsub"></small></div><div class="dn"><button id="prev" aria-label="Vorheriger Tag">‹</button><button id="next" aria-label="Nächster Tag">›</button></div></div>
 <div class="hero" id="hero">
-  <div class="dn"><button id="prev" aria-label="Vorheriger Tag">‹</button><b id="dl"></b><button id="next" aria-label="Nächster Tag">›</button></div>
   <div class="ringw">
     <svg viewBox="0 0 200 200" aria-hidden="true"><circle class="rt" cx="100" cy="100" r="86"/><circle class="rp" id="ring" cx="100" cy="100" r="86" stroke-dasharray="540.35" stroke-dashoffset="540.35"/></svg>
     <div class="rc"><span class="n" id="rem">0</span><span class="l" id="reml">kcal übrig</span></div>
   </div>
-  <div class="hs"><b><span id="tot">0</span></b> gegessen · Ziel <button id="setg"><span id="goal"></span> kcal</button></div>
-  <div class="mb" id="mb"><i style="flex-grow:1;background:#ffffff00"></i></div>
-  <div class="mt">
-    <div><b><span id="p">0</span><small> g</small></b><span class="pd" style="background:#ff8f73"></span>Eiweiß</div>
-    <div><b><span id="c">0</span><small> g</small></b><span class="pd" style="background:#f2c14e"></span>Kohlenhydrate</div>
-    <div><b><span id="f">0</span><small> g</small></b><span class="pd" style="background:#6fb8f0"></span>Fett</div>
+  <div class="hi">
+    <div><small>Gegessen</small><b><span id="tot">0</span> kcal</b></div>
+    <div><small>Tagesziel</small><button id="setg"><span id="goal"></span> kcal</button></div>
   </div>
-  <div class="hb"><button id="stat">Auswertung</button><button id="ask">Essensvorschlag</button></div>
+</div>
+<div class="mt">
+  <div class="t"><small>Eiweiß</small><b><span id="p">0</span> <em>g</em></b><i><s id="bp" style="background:var(--c1);width:0"></s></i></div>
+  <div class="t"><small>Kohlenhydrate</small><b><span id="c">0</span> <em>g</em></b><i><s id="bc" style="background:var(--c2);width:0"></s></i></div>
+  <div class="t"><small>Fett</small><b><span id="f">0</span> <em>g</em></b><i><s id="bf" style="background:var(--c3);width:0"></s></i></div>
 </div>
 
 <div id="list"></div>
+<button class="sug" id="ask">Essensvorschlag von Claude</button>
 <div class="foot">
   <button id="exp">Export</button>
   <button id="imp">Import</button>
@@ -265,20 +279,25 @@ function render(){
   $('#hero').classList.toggle('over',over);
   $('#rem').textContent=Math.abs(rem);$('#reml').textContent=over?'kcal drüber':'kcal übrig';
   $('#ring').style.strokeDashoffset=540.35*(1-Math.min(1,Math.max(0,t/db.goal)));
-  const ke=[P*4,C*4,F*9],kt=ke[0]+ke[1]+ke[2],col=['#ff8f73','#f2c14e','#6fb8f0'];
-  $('#mb').innerHTML=kt>0?ke.map((v,i)=>`<i style="flex-grow:${v};background:${col[i]}"></i>`).join(''):'<i style="flex-grow:1"></i>';
-  $('#dl').textContent=day===iso(new Date())?'Heute':new Date(day).toLocaleDateString('de-DE',{weekday:'short',day:'numeric',month:'short'});
+  const ke=[P*4,C*4,F*9],kt=ke[0]+ke[1]+ke[2];
+  ['bp','bc','bf'].forEach((id,i)=>$('#'+id).style.width=(kt>0?Math.round(ke[i]/kt*100):0)+'%');
+  const today=day===iso(new Date());
+  $('#dl').textContent=today?'Heute':new Date(day).toLocaleDateString('de-DE',{weekday:'long'});
+  $('#dsub').textContent=new Date(day).toLocaleDateString('de-DE',{weekday:'short',day:'numeric',month:'long'});
   const sub=e=>!e.u||e.u==='g'?(e.g?r(e.g)+' g':''):e.u==='ml'?r(e.g)+' ml':/\)\s*$/.test(e.u)?e.u:e.u+' · '+r(e.g)+' g';
-  $('#list').innerHTML=es.length?MEALS.map(m=>{
-    const x=es.filter(e=>e.m===m);if(!x.length)return'';
-    return`<div class="card"><h2>${m}<span>${Math.round(x.reduce((a,e)=>a+e.k,0))} kcal</span></h2>`+
+  const MI={'Frühstück':['🥣','#fff1cf'],'Mittagessen':['🍽️','#dcf5e6'],'Abendessen':['🌙','#e4e7ff'],'Snacks':['🍎','#ffe3dd']};
+  $('#list').innerHTML=MEALS.map(m=>{
+    const x=es.filter(e=>e.m===m),[ic,bg]=MI[m];
+    if(!x.length)return`<div class="addm" data-m="${m}"><div class="mi" style="background:var(--bg)">${ic}</div><div class="mx"><b>${m}</b><span>Noch nichts eingetragen</span></div><span class="pl">+</span></div>`;
+    return`<div class="card meal"><div class="mh"><div class="mi" style="background:${bg}">${ic}</div><div class="mx">${m}<span>${x.length} ${x.length===1?'Eintrag':'Einträge'}</span></div><b>${Math.round(x.reduce((a,e)=>a+e.k,0))} kcal</b></div>`+
     x.map(e=>`<div class="it"><div class="nm edit" data-e="${e.id}">${esc(e.n)}${sub(e)?`<div class="mu">${esc(sub(e))}</div>`:''}</div><div class="kc">${Math.round(e.k)}<small>kcal</small></div><button class="x" data-id="${e.id}" aria-label="Eintrag löschen">×</button></div>`).join('')+'</div>';
-  }).join(''):'<div class="card empty"><b>Noch nichts gegessen</b>Tippe unten auf Hinzufügen, um den ersten Eintrag zu machen. Einträge lassen sich antippen und bearbeiten.</div>';
+  }).join('');
 }
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const shift=n=>{const d=new Date(day);d.setDate(d.getDate()+n);day=iso(d);render()};
 $('#prev').onclick=()=>shift(-1);$('#next').onclick=()=>shift(1);
-$('#list').onclick=e=>{const ed=e.target.closest('.edit');if(ed)return openEdit(ed.dataset.e);
+$('#list').onclick=e=>{const am=e.target.closest('.addm');if(am){$('#meal').value=am.dataset.m;$('#dlg').showModal();showFav();return}
+  const ed=e.target.closest('.edit');if(ed)return openEdit(ed.dataset.e);
   const id=e.target.dataset.id;if(id){db.e=db.e.filter(x=>String(x.id)!==id);save();render()}};
 $('#setg').onclick=()=>{const v=parseInt(prompt('Tagesziel (kcal):',db.goal));if(v>0){db.goal=v;db.gt=Date.now();save();render()}};
 
