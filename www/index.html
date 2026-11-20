@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <script>
-var VERSION=19;
+var VERSION=20;
 window.__live=0;
 (function(){try{
   var l=JSON.parse(localStorage.getItem('liveapp')||'null');
@@ -309,7 +309,7 @@ $('#q').oninput=()=>{
   if(!q){$('#pick').hidden=true;showFav();return}
   if(q.length<2||/^\d+$/.test(q))return;
   const l=quick(q);
-  if(l.length){$('#pick').hidden=true;renderRes(l,'Sofort-Treffer · „Suche“ tippen für Open Food Facts'+(l.some(x=>x.bls)?'<br>BLS-Daten: Max Rubner-Institut (2025): Bundeslebensmittelschlüssel (BLS), Version 4.0. Karlsruhe.':''))}
+  if(l.length){$('#pick').hidden=true;renderRes(l,'Sofort-Treffer · „Suche“ tippen für Open Food Facts')}
   else $('#res').innerHTML='';
 };
 async function search(){
