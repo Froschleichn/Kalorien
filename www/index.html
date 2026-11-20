@@ -79,6 +79,19 @@ video{width:100%;border-radius:10px;margin-top:8px}
   </details>
 </dialog>
 
+<dialog id="edlg">
+  <div class="row sp"><b>Eintrag bearbeiten</b><button class="x" id="ecl">×</button></div>
+  <div style="display:grid;gap:8px;margin-top:10px">
+    <input id="en" placeholder="Name">
+    <div class="row"><select id="em"></select><input id="edate" type="date"></div>
+    <div class="row"><input id="eg" type="number" inputmode="decimal" placeholder="Menge"><span>g</span></div>
+    <input id="ek" type="number" inputmode="decimal" placeholder="kcal gesamt">
+    <div class="row"><input id="ep" type="number" inputmode="decimal" placeholder="Eiweiß g"><input id="ec" type="number" inputmode="decimal" placeholder="KH g"><input id="ef" type="number" inputmode="decimal" placeholder="Fett g"></div>
+    <div class="mu" id="eh"></div>
+    <button id="eok">Speichern</button>
+  </div>
+</dialog>
+
 <script>
 const $=s=>document.querySelector(s);
 let db;try{db=JSON.parse(localStorage.getItem('kt'))}catch(e){}
@@ -101,13 +114,14 @@ function render(){
   $('#list').innerHTML=MEALS.map(m=>{
     const x=es.filter(e=>e.m===m);if(!x.length)return'';
     return`<div class="card"><h2>${m} · ${Math.round(x.reduce((a,e)=>a+e.k,0))} kcal</h2>`+
-    x.map(e=>`<div class="it"><div>${esc(e.n)}<div class="mu">${e.g?e.g+' g · ':''}${Math.round(e.k)} kcal</div></div><button class="x" data-id="${e.id}">×</button></div>`).join('')+'</div>';
-  }).join('');
+    x.map(e=>`<div class="it"><div class="edit" data-e="${e.id}" style="flex:1;cursor:pointer">${esc(e.n)}<div class="mu">${e.g?e.g+' g · ':''}${Math.round(e.k)} kcal</div></div><button class="x" data-id="${e.id}">×</button></div>`).join('')+'</div>';
+  }).join('')+(es.length?'<div class="mu" style="text-align:center;font-size:12px">Eintrag antippen zum Bearbeiten</div>':'');
 }
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const shift=n=>{const d=new Date(day);d.setDate(d.getDate()+n);day=iso(d);render()};
 $('#prev').onclick=()=>shift(-1);$('#next').onclick=()=>shift(1);
-$('#list').onclick=e=>{const id=e.target.dataset.id;if(id){db.e=db.e.filter(x=>String(x.id)!==id);save();render()}};
+$('#list').onclick=e=>{const ed=e.target.closest('.edit');if(ed)return openEdit(ed.dataset.e);
+  const id=e.target.dataset.id;if(id){db.e=db.e.filter(x=>String(x.id)!==id);save();render()}};
 $('#setg').onclick=()=>{const v=parseInt(prompt('Tagesziel (kcal):',db.goal));if(v>0){db.goal=v;db.gt=Date.now();save();render()}};
 
 function addEntry(o){db.e.push({id:Date.now().toString(36)+Math.random().toString(36).slice(2,6),d:day,m:$('#meal').value,...o});save();render();closeD()}
@@ -197,6 +211,31 @@ $('#scan').onclick=async()=>{
       :'Fehler: '+(n||e);
     $('#res').textContent=m;
   }
+};
+
+// Einträge nachträglich bearbeiten
+let ent=null,orig=null;
+$('#em').innerHTML=MEALS.map(m=>`<option>${m}</option>`).join('');
+function openEdit(id){
+  ent=db.e.find(x=>String(x.id)===id);if(!ent)return;
+  orig={g:ent.g||0,k:ent.k,p:ent.p,c:ent.c,f:ent.f};
+  $('#en').value=ent.n;$('#em').value=ent.m;$('#edate').value=ent.d;
+  $('#eg').value=ent.g||'';$('#ek').value=r(ent.k);$('#ep').value=r(ent.p);$('#ec').value=r(ent.c);$('#ef').value=r(ent.f);
+  $('#eh').textContent=orig.g?'Ändern der Menge rechnet kcal und Nährwerte automatisch um.':'';
+  $('#edlg').showModal();
+}
+$('#eg').oninput=()=>{
+  const v=+$('#eg').value;if(!orig||!orig.g||!v)return;
+  const q=v/orig.g;
+  $('#ek').value=r(orig.k*q);$('#ep').value=r(orig.p*q);$('#ec').value=r(orig.c*q);$('#ef').value=r(orig.f*q);
+};
+$('#ecl').onclick=()=>$('#edlg').close();
+$('#eok').onclick=()=>{
+  const k=parseFloat($('#ek').value),d=$('#edate').value;
+  if(!(k>=0)||!d){$('#eh').textContent='Bitte kcal und Datum angeben.';return}
+  Object.assign(ent,{n:$('#en').value.trim()||'Eintrag',m:$('#em').value,d,g:+$('#eg').value||0,k,
+    p:+$('#ep').value||0,c:+$('#ec').value||0,f:+$('#ef').value||0});
+  save();render();$('#edlg').close();
 };
 
 // Export / Import
