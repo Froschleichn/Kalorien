@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <script>
-var VERSION=4;
+var VERSION=5;
 window.__live=0;
 (function(){try{
   var l=JSON.parse(localStorage.getItem('liveapp')||'null');
@@ -159,22 +159,45 @@ function norm(p){
   const pt=sq>0?[{n:/^[\d.,\s]*(g|ml|gr)?$/i.test(sz)?'Portion':sz,g:sq}]:[];
   return{key:p.code||nm.toLowerCase(),n:nm,k:+k,p:+n.proteins_100g||0,c:+n.carbohydrates_100g||0,f:+n.fat_100g||0,pt};
 }
+// Offline-Cache: alle gesehenen Produkte bleiben auf dem Handy (max. 500, älteste fliegen zuerst raus)
+let cache={};try{cache=JSON.parse(localStorage.getItem('kcache')||'{}')||{}}catch(e){}
+function showVer(){$('#ver').textContent='Version '+VERSION+' · '+Object.keys(cache).length+' Produkte offline'}
+function remember(list){
+  const t=Date.now();list.forEach(x=>{cache[x.key]={...x,t}});
+  Object.keys(cache).sort((a,b)=>cache[b].t-cache[a].t).slice(500).forEach(k=>delete cache[k]);
+  try{localStorage.setItem('kcache',JSON.stringify(cache))}catch(e){}
+  showVer();
+}
+function localSearch(q){
+  const ws=q.toLowerCase().split(/\s+/).filter(Boolean),pool={...cache};
+  for(const [k,x] of Object.entries(db.items))if(!pool[k])pool[k]={key:k,...x};
+  return Object.values(pool).filter(x=>x.key===q||ws.every(w=>x.n.toLowerCase().includes(w)))
+    .sort((a,b)=>(b.t||0)-(a.t||0)).slice(0,20);
+}
 async function search(){
   const q=$('#q').value.trim();if(!q)return;
   $('#res').textContent='Suche …';$('#pick').hidden=true;
-  try{
-    let items;
-    if(/^\d{8,14}$/.test(q)){
-      const j=await(await fetch(`${OFF}/api/v2/product/${q}.json?fields=${FIELDS}`)).json();
-      items=j.product?[j.product]:[];
-    }else{
-      const j=await(await fetch(`${OFF}/cgi/search.pl?search_terms=${encodeURIComponent(q)}&search_simple=1&action=process&json=1&page_size=20&fields=${FIELDS}`)).json();
-      items=j.products||[];
-    }
-    const list=items.map(norm).filter(Boolean);
-    window._r=list;
-    $('#res').innerHTML=list.length?list.map((x,i)=>`<div class="res" data-i="${i}" style="color:var(--tx)">${esc(x.n)}<div class="mu">${Math.round(x.k)} kcal / 100 g</div></div>`).join(''):'Nichts gefunden. Du kannst unten manuell eintragen.';
-  }catch(e){$('#res').textContent='Fehler: keine Verbindung zu Open Food Facts.'}
+  const isCode=/^\d{8,14}$/.test(q);let list,offline=false;
+  if(isCode&&cache[q])list=[cache[q]];
+  else{
+    const ac=new AbortController(),to=setTimeout(()=>ac.abort(),8000);
+    try{
+      let items;
+      if(isCode){
+        const j=await(await fetch(`${OFF}/api/v2/product/${q}.json?fields=${FIELDS}`,{signal:ac.signal})).json();
+        items=j.product?[j.product]:[];
+      }else{
+        const j=await(await fetch(`${OFF}/cgi/search.pl?search_terms=${encodeURIComponent(q)}&search_simple=1&action=process&json=1&page_size=20&fields=${FIELDS}`,{signal:ac.signal})).json();
+        items=j.products||[];
+      }
+      list=items.map(norm).filter(Boolean);remember(list);
+    }catch(e){offline=true;list=localSearch(q)}
+    clearTimeout(to);
+  }
+  window._r=list;
+  $('#res').innerHTML=(offline?'<div class="mu" style="margin:4px 0">Offline – gespeicherte Produkte</div>':'')+
+    (list.length?list.map((x,i)=>`<div class="res" data-i="${i}" style="color:var(--tx)">${esc(x.n)}<div class="mu">${Math.round(x.k)} kcal / 100 g</div></div>`).join(''):
+    offline?'Kein gespeichertes Produkt gefunden – ohne Netz bitte unten manuell eintragen.':'Nichts gefunden. Du kannst unten manuell eintragen.');
 }
 $('#go').onclick=search;$('#q').onkeydown=e=>{if(e.key==='Enter')search()};
 // Häufig verwendete Artikel und Portionen
@@ -327,7 +350,7 @@ $('#file').onchange=async e=>{
 };
 
 // Live-Update: holt die neueste index.html aus dem GitHub-Repository und startet damit neu
-$('#ver').textContent='Version '+VERSION;
+showVer();
 $('#upd').onclick=async()=>{
   const st=$('#ust');
   let repo=localStorage.getItem('krepo');
