@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <script>
-var VERSION=11;
+var VERSION=12;
 window.__live=0;
 (function(){try{
   var l=JSON.parse(localStorage.getItem('liveapp')||'null');
@@ -46,6 +46,9 @@ video{width:100%;border-radius:10px;margin-top:8px}
 .m{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center}
 .beer{position:fixed;left:max(16px,calc(50% - 264px));bottom:20px;width:54px;height:54px;border-radius:50%;padding:0;background:var(--card);border:1px solid var(--ln);box-shadow:0 4px 14px #0004;display:flex;align-items:center;justify-content:center}
 .beer:active{transform:scale(.92)}
+.beer{touch-action:manipulation;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}
+.beer.mass{animation:pop .35s ease}
+@keyframes pop{0%{transform:scale(.8)}60%{transform:scale(1.18)}100%{transform:scale(1)}}
 #toast{position:fixed;left:50%;transform:translateX(-50%);bottom:88px;background:#222;color:#fff;border-radius:12px;padding:10px 14px;display:flex;gap:14px;align-items:center;font-size:14px;box-shadow:0 4px 14px #0005;z-index:20;max-width:92vw}
 #toast[hidden]{display:none}
 #toast button{background:none;color:#8fd3a8;padding:0;font-weight:600}
@@ -75,13 +78,13 @@ video{width:100%;border-radius:10px;margin-top:8px}
 <div class="mu" style="text-align:center;font-size:12px;margin-top:8px"><span id="ver"></span> <span id="ust"></span></div>
 
 <button class="fab" id="add">+ Hinzufügen</button>
-<button class="beer" id="beer" aria-label="500 ml Bier hinzufügen" title="500 ml Bier">
-  <svg viewBox="0 0 24 48" width="18" height="36" aria-hidden="true">
+<button class="beer" id="beer" aria-label="Bier hinzufügen: Tippen 0,5 l, lang drücken 1 l" title="Tippen: 0,5 l · Lang drücken: 1 l (Maß)">
+  <span id="bicon" style="display:flex"><svg viewBox="0 0 24 48" width="18" height="36" aria-hidden="true">
     <rect x="9" y="0" width="6" height="3" rx="1" fill="#9a6b2f"/>
     <path d="M9.5 3h5v10c0 2 3.5 4 3.5 9v22a3 3 0 0 1-3 3H9a3 3 0 0 1-3-3V22c0-5 3.5-7 3.5-9z" fill="#e8a317" stroke="#7a4a10" stroke-width="1.2"/>
     <rect x="6.6" y="27" width="10.8" height="11" fill="#fff8e1" opacity=".92"/>
     <path d="M10.5 7v5" stroke="#fff" stroke-opacity=".55" stroke-width="1.3" stroke-linecap="round"/>
-  </svg>
+  </svg></span>
 </button>
 <div id="toast" hidden><span id="tmsg"></span><button id="tundo">Rückgängig</button></div>
 
@@ -421,15 +424,38 @@ $('#schart').onclick=e=>{
   else{day=el.dataset.k;render();$('#sdlg').close()}
 };
 
-// Bierflasche: ein Tipp = 500 ml Bier (Richtwert Pils/Helles: ca. 42 kcal je 100 ml)
-let tt=null,lastBeer=null;
-$('#beer').onclick=()=>{
-  const id=Date.now().toString(36)+Math.random().toString(36).slice(2,6);
-  db.e.push({id,d:day,m:'Snacks',n:'Bier (0,5 l)',g:0,u:'',k:210,p:2,c:16,f:0});
+// Bierflasche: Tippen = 0,5 l, langes Drücken = 1 l (Maßkrug). Richtwert Pils/Helles: ca. 42 kcal je 100 ml
+const BOTTLE=$('#bicon').innerHTML,KRUG=`<svg viewBox="0 0 40 40" width="38" height="38" aria-hidden="true">
+    <path d="M27 13h3.5a4.5 4.5 0 0 1 4.5 4.5v7a4.5 4.5 0 0 1-4.5 4.5H27" fill="none" stroke="#7a4a10" stroke-width="2.6" stroke-linecap="round"/>
+    <path d="M5 9h22l-1.5 24.5a2.5 2.5 0 0 1-2.5 2.3H9a2.5 2.5 0 0 1-2.5-2.3z" fill="#e8a317" stroke="#7a4a10" stroke-width="1.6" stroke-linejoin="round"/>
+    <path d="M10.5 15v15M15.5 15v15M20.5 15v15" stroke="#fff" stroke-opacity=".38" stroke-width="1.6" stroke-linecap="round"/>
+    <g fill="#cdb98f" stroke="#cdb98f" stroke-width="2.4"><circle cx="9.5" cy="8" r="3.6"/><circle cx="16" cy="6" r="4.4"/><circle cx="22.5" cy="8" r="3.6"/><rect x="6" y="8" width="20" height="3"/></g>
+    <g fill="#fffaf0"><circle cx="9.5" cy="8" r="3.6"/><circle cx="16" cy="6" r="4.4"/><circle cx="22.5" cy="8" r="3.6"/><rect x="6" y="8" width="20" height="3"/></g>
+  </svg>`;
+let tt=null,lastBeer=null,lpT=null,lpDone=false,lpBack=null;
+function addBeer(l){
+  const id=Date.now().toString(36)+Math.random().toString(36).slice(2,6),k=Math.round(420*l);
+  db.e.push({id,d:day,m:'Snacks',n:l>=1?'Bier (1 l, Maß)':'Bier (0,5 l)',g:0,u:'',k,p:4*l,c:32*l,f:0});
   save();render();lastBeer=id;
-  $('#tmsg').textContent='🍺 500 ml Bier hinzugefügt (210 kcal)';$('#toast').hidden=false;
+  $('#tmsg').textContent=`🍺 ${l>=1?'1 l':'500 ml'} Bier hinzugefügt (${k} kcal)`;$('#toast').hidden=false;
   clearTimeout(tt);tt=setTimeout(()=>{$('#toast').hidden=true},5000);
+}
+const lpStart=e=>{
+  if(e.button>0)return;
+  lpDone=false;clearTimeout(lpT);
+  lpT=setTimeout(()=>{
+    lpDone=true;
+    $('#bicon').innerHTML=KRUG;$('#beer').classList.remove('mass');void $('#beer').offsetWidth;$('#beer').classList.add('mass');
+    navigator.vibrate&&navigator.vibrate([40,30,40]);
+    addBeer(1);
+    clearTimeout(lpBack);lpBack=setTimeout(()=>{$('#bicon').innerHTML=BOTTLE;$('#beer').classList.remove('mass')},1500);
+  },500);
 };
+const lpEnd=()=>clearTimeout(lpT);
+$('#beer').addEventListener('pointerdown',lpStart);
+['pointerup','pointerleave','pointercancel'].forEach(t=>$('#beer').addEventListener(t,lpEnd));
+$('#beer').addEventListener('contextmenu',e=>e.preventDefault());
+$('#beer').onclick=()=>{if(lpDone){lpDone=false;return}addBeer(0.5)};
 $('#tundo').onclick=()=>{db.e=db.e.filter(x=>x.id!==lastBeer);save();render();$('#toast').hidden=true;clearTimeout(tt)};
 
 // Export / Import
