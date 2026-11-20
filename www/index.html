@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <script>
-var VERSION=5;
+var VERSION=6;
 window.__live=0;
 (function(){try{
   var l=JSON.parse(localStorage.getItem('liveapp')||'null');
@@ -55,7 +55,7 @@ video{width:100%;border-radius:10px;margin-top:8px}
 
 <div class="card">
   <div class="row sp"><div><span class="big" id="tot">0</span> <span class="mu">/ <span id="goal"></span> kcal</span></div>
-  <button class="g" id="setg">Ziel</button></div>
+  <div class="row" style="gap:6px"><button class="g" id="stat">Übersicht</button><button class="g" id="setg">Ziel</button></div></div>
   <div class="bar" id="bar"><i></i></div>
   <div class="m mu"><div><b id="p">0</b> g<br>Eiweiß</div><div><b id="c">0</b> g<br>Kohlenhydrate</div><div><b id="f">0</b> g<br>Fett</div></div>
 </div>
@@ -106,6 +106,14 @@ video{width:100%;border-radius:10px;margin-top:8px}
     <div class="mu" id="eh"></div>
     <button id="eok">Speichern</button>
   </div>
+</dialog>
+
+<dialog id="sdlg">
+  <div class="row sp"><b>Übersicht</b><button class="x" id="scl">×</button></div>
+  <div class="row" style="margin:10px 0"><button class="stab" data-v="w" style="flex:1">Woche</button><button class="stab g" data-v="m" style="flex:1">Monat</button><button class="stab g" data-v="y" style="flex:1">Jahr</button></div>
+  <div class="row sp"><button class="g" id="sp">‹</button><b id="slab" style="text-align:center"></b><button class="g" id="sn">›</button></div>
+  <div id="schart"></div>
+  <div id="ssum"></div>
 </dialog>
 
 <script>
@@ -330,6 +338,73 @@ $('#eok').onclick=()=>{
   Object.assign(ent,{n:$('#en').value.trim()||'Eintrag',m:$('#em').value,d,g:+$('#eg').value||0,k,
     p:+$('#ep').value||0,c:+$('#ec').value||0,f:+$('#ef').value||0});
   save();render();$('#edlg').close();
+};
+
+// Auswertung: Woche / Monat / Jahr
+let sv='w',sref=new Date();
+const pad=n=>String(n).padStart(2,'0');
+const D=t=>{const a=t.split('-').map(Number);return new Date(a[0],a[1]-1,a[2])};
+const MON=['Jan','Feb','Mär','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez'];
+function isoWeek(d){const t=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()));t.setUTCDate(t.getUTCDate()+4-(t.getUTCDay()||7));return Math.ceil(((t-Date.UTC(t.getUTCFullYear(),0,1))/864e5+1)/7)}
+function buckets(){
+  const m={},out=[];
+  db.e.forEach(e=>{const a=m[e.d]||(m[e.d]={k:0,p:0,c:0,f:0});a.k+=e.k;a.p+=e.p;a.c+=e.c;a.f+=e.f});
+  if(sv==='w'){
+    const d0=new Date(sref.getFullYear(),sref.getMonth(),sref.getDate());d0.setDate(d0.getDate()-(d0.getDay()+6)%7);
+    for(let i=0;i<7;i++){const d=new Date(d0);d.setDate(d0.getDate()+i);const k=iso(d);out.push({k,l:['Mo','Di','Mi','Do','Fr','Sa','So'][i],a:m[k]?[m[k]]:[]})}
+  }else if(sv==='m'){
+    const y=sref.getFullYear(),mo=sref.getMonth(),n=new Date(y,mo+1,0).getDate();
+    for(let i=1;i<=n;i++){const k=y+'-'+pad(mo+1)+'-'+pad(i);out.push({k,l:[1,5,10,15,20,25,30].includes(i)?i:'',a:m[k]?[m[k]]:[]})}
+  }else{
+    const y=sref.getFullYear();
+    for(let i=0;i<12;i++){const pre=y+'-'+pad(i+1)+'-';out.push({k:pre+'01',l:MON[i],a:Object.keys(m).filter(x=>x.startsWith(pre)).map(x=>m[x])})}
+  }
+  return out;
+}
+function renderStats(){
+  const b=buckets(),days=b.flatMap(x=>x.a),n=days.length,goal=db.goal;
+  const sum=k=>days.reduce((t,x)=>t+x[k],0);
+  const vals=b.map(x=>x.a.length?x.a.reduce((t,y)=>t+y.k,0)/x.a.length:0);
+  const mx=Math.max(goal*1.15,...vals);
+  document.querySelectorAll('.stab').forEach(t=>t.className='stab'+(t.dataset.v===sv?'':' g'));
+  let lab;
+  if(sv==='w'){const a=D(b[0].k),z=D(b[6].k);lab=`KW ${isoWeek(a)} · ${a.getDate()}.${a.getMonth()+1}. – ${z.getDate()}.${z.getMonth()+1}.${z.getFullYear()}`}
+  else if(sv==='m')lab=sref.toLocaleDateString('de-DE',{month:'long',year:'numeric'});
+  else lab=String(sref.getFullYear());
+  $('#slab').textContent=lab;
+  $('#schart').innerHTML=`<div style="position:relative;height:150px;display:flex;align-items:flex-end;gap:${sv==='m'?1:4}px;border-bottom:1px solid var(--ln);margin-top:10px">`+
+    `<div style="position:absolute;left:0;right:0;bottom:${goal/mx*100}%;border-top:1px dashed var(--mu);pointer-events:none"></div>`+
+    b.map((x,i)=>`<div data-k="${x.k}" style="flex:1;height:100%;display:flex;align-items:flex-end;cursor:pointer"><div style="width:100%;height:${vals[i]?Math.max(2,vals[i]/mx*100):0}%;background:${vals[i]>goal?'var(--bad)':'var(--ac)'};border-radius:3px 3px 0 0"></div></div>`).join('')+
+    `</div><div style="display:flex;gap:${sv==='m'?1:4}px;font-size:${sv==='m'?10:12}px;color:var(--mu);text-align:center">`+b.map(x=>`<div style="flex:1;min-width:0">${x.l||'&nbsp;'}</div>`).join('')+`</div><div class="mu" style="font-size:12px;margin-top:4px">${sv==='y'?'Ø kcal pro erfasstem Tag je Monat':'kcal pro Tag'} · gestrichelt: Ziel ${goal}</div>`;
+  if(!n){$('#ssum').innerHTML='<div class="mu" style="margin-top:12px">Keine Einträge in diesem Zeitraum.</div>';return}
+  const N=sv==='w'?7:sv==='m'?b.length:Math.round((new Date(sref.getFullYear()+1,0,1)-new Date(sref.getFullYear(),0,1))/864e5);
+  const avg=sum('k')/n,diff=Math.round(avg-goal),ok=days.filter(x=>x.k<=goal).length;
+  const ek=sum('p')*4+sum('c')*4+sum('f')*9||1,pc=x=>Math.round(x/ek*100);
+  const card=(t,v,sub)=>`<div class="card" style="margin:0;padding:10px"><div class="mu">${t}</div><div style="font-size:20px;font-weight:700">${v}</div>${sub?`<div class="mu">${sub}</div>`:''}</div>`;
+  $('#ssum').innerHTML='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px">'+
+    card('Ø pro Tag',Math.round(avg)+' kcal',(diff>0?'+':'')+diff+' kcal zum Ziel')+
+    card('Gesamt',Math.round(sum('k')).toLocaleString('de-DE')+' kcal','')+
+    card('Erfasste Tage',n+' / '+N,'')+
+    card('Im Ziel',ok+' von '+n+' Tagen','bis '+goal+' kcal')+
+    card('Ø Eiweiß',Math.round(sum('p')/n)+' g',pc(sum('p')*4)+' % der Energie')+
+    card('Ø Kohlenhydrate',Math.round(sum('c')/n)+' g',pc(sum('c')*4)+' % der Energie')+
+    card('Ø Fett',Math.round(sum('f')/n)+' g',pc(sum('f')*9)+' % der Energie')+
+    '</div>';
+}
+function shiftStats(d){
+  if(sv==='w')sref=new Date(sref.getFullYear(),sref.getMonth(),sref.getDate()+7*d);
+  else if(sv==='m')sref=new Date(sref.getFullYear(),sref.getMonth()+d,1);
+  else sref=new Date(sref.getFullYear()+d,0,1);
+  renderStats();
+}
+$('#stat').onclick=()=>{sref=D(day);renderStats();$('#sdlg').showModal()};
+$('#scl').onclick=()=>$('#sdlg').close();
+$('#sp').onclick=()=>shiftStats(-1);$('#sn').onclick=()=>shiftStats(1);
+document.querySelectorAll('.stab').forEach(t=>t.onclick=()=>{sv=t.dataset.v;renderStats()});
+$('#schart').onclick=e=>{
+  const el=e.target.closest('[data-k]');if(!el)return;
+  if(sv==='y'){sref=D(el.dataset.k);sv='m';renderStats()}
+  else{day=el.dataset.k;render();$('#sdlg').close()}
 };
 
 // Export / Import
