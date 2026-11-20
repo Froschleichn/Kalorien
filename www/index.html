@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <script>
-var VERSION=25;
-var VERSION_NAME='2026.11.20.13';
+var VERSION=26;
+var VERSION_NAME='2026.11.20.14';
 window.__live=0;
 (function(){try{
   var l=JSON.parse(localStorage.getItem('liveapp')||'null');
@@ -345,6 +345,54 @@ function blsSearch(q){
   }
   return out.sort((a,b)=>b[0]-a[0]||a[1].n.length-b[1].n.length).map(x=>x[1]);
 }
+// Portionen für BLS-Einträge: Richtwerte nach Stichwort im Namen (BLS selbst kennt nur 100 g). Erster Treffer gewinnt.
+const fr=w=>new RegExp('^('+w+')( geschält| ungeschält| mit schale)?,? roh$');
+const PR=[
+ [fr('apfel'),'1 Stück:180'],[fr('birne'),'1 Stück:150'],[fr('banane'),'1 Stück:110'],[fr('orange'),'1 Stück:150'],
+ [fr('mandarine|clementine'),'1 Stück:60'],[fr('kiwi'),'1 Stück:75'],[fr('pfirsich|nektarine'),'1 Stück:130'],
+ [fr('pflaume|zwetschge|zwetschke'),'1 Stück:30'],[fr('aprikose'),'1 Stück:40'],[fr('weintraube'),'1 Handvoll:80'],
+ [fr('erdbeere'),'1 Handvoll:100'],[fr('himbeere|heidelbeere|blaubeere|brombeere|johannisbeere|kirsche'),'1 Handvoll:80'],
+ [fr('honigmelone|wassermelone|melone'),'1 Scheibe:200'],[fr('ananas'),'1 Scheibe:80'],[fr('mango'),'1 Stück:200'],
+ [fr('avocado'),'1 Stück:150'],[fr('grapefruit|pampelmuse'),'1 Stück:250'],
+ [fr('tomate'),'1 Stück:100'],[fr('salatgurke|gurke'),'1 Stück:300'],[/^paprika[^,]*,? roh$/,'1 Stück:150'],
+ [/^(karotte|möhre)[^,]*,? roh$/,'1 Stück:80'],[fr('zwiebel'),'1 Stück:60'],[fr('knoblauch'),'1 Zehe:4'],[fr('zucchini'),'1 Stück:200'],
+ [/^(brokkoli|blumenkohl)[^,]*,? (roh|gekocht|gedünstet)/,'1 Portion:200'],[/^champignon[^,]*,? roh$/,'1 Portion:100'],
+ [/^kartoffel[^,]*,? (roh|gekocht)$|^kartoffeln? (geschält|ungeschält|mit schale)[^,]*,? (roh|gekocht)$/,'1 Stück:100;1 Portion:200'],
+ [/^kartoffelpüree/,'1 Portion:200'],[/pommes|bratkartoffel|röstkartoffel/,'1 Portion:150'],[/chips/,'1 Handvoll:30;1 Tüte:150'],
+ [/knäckebrot/,'1 Scheibe:10'],[/toastbrot/,'1 Scheibe:25'],[/brot( |,|$)|brot\b/,'1 Scheibe:50'],
+ [/^(brötchen|semmel(?!knödel|brösel|mehl|auflauf)|weck|schrippe)/,'1 Stück:55'],[/brezel|breze|brezn/,'1 Stück:100'],[/^croissant|^hörnchen/,'1 Stück:60'],
+ [/^(hafer ?flocken|hafer flocken)$/,'1 EL:10;1 Portion:50'],[/^(cornflakes|müsli|cerealien)/,'1 Portion:40'],
+ [/^(milch|buttermilch|kefir|trinkjoghurt|kakao)( |,|$)(?!.*(pulver|brei))/,'1 Glas (200 ml):200'],
+ [/^joghurt/,'1 Becher:150'],[/^(speise)?quark(?!krapfen)/,'1 EL:25;1 Portion:125'],
+ [/^mozzarella/,'1 Kugel:125'],[/^frischkäse/,'1 Portion:30;1 EL:20'],[/^parmesan/,'1 EL:8'],
+ [/^(camembert|brie)/,'1 Ecke:30'],[/^(gouda|emmentaler|edamer|tilsiter|butterkäse|schnittkäse|bergkäse|cheddar|appenzeller|gruyère|hartkäse|schmelzkäse|raclette)/,'1 Scheibe:25'],
+ [/^(butter|margarine)( |,|$)/,'1 TL:5;1 Portion:10'],[/^(sahne|schlagsahne|schmand|crème fraîche|creme fraiche)/,'1 EL:15'],
+ [/^hühnerei eigelb/,'1 Stück:20'],[/^hühnerei eiklar/,'1 Stück:33'],[/^hühnerei( roh| gekocht| gebraten[^,]*)?$/,'1 Stück:55'],
+ [/^leberkäse/,'1 Scheibe:100'],[/^(salami|schinken|kochschinken|lyoner|aufschnitt|mortadella|fleischwurst|teewurst|bierschinken)/,'1 Scheibe:20'],
+ [/^(bockwurst)/,'1 Stück:100'],[/^(wiener würstchen|frankfurter würstchen|würstchen)/,'1 Stück:50'],[/^bratwurst|^(rost|nürnberger|thüringer)bratwurst/,'1 Stück:120'],
+ [/^thunfisch.*konserve/,'1 Dose (abgetropft):120'],[/^(?!.*(rogen|leber|tran|sülze))(lachs|forelle|kabeljau|seelachs|scholle|hering|makrele|thunfisch|zander|dorade)/,'1 Filet:150'],
+ [/^(rind|schwein|pute|huhn|hähnchen|hühnchen|kalb|lamm|ente|gans)\b.*(filet|steak|schnitzel|brust|kotelett)/,'1 Portion:150'],[/(^| )hackfleisch( |,|$)/,'1 Portion:125'],
+ [/^(teigwaren|eierteigwaren|vollkornteigwaren|nudeln|spaghetti)[^,]*,? (gekocht|gegart)/,'1 Portion:200'],
+ [/^(teigwaren|eierteigwaren|vollkornteigwaren|nudeln|spaghetti)[^,]*,? (roh|getrocknet)$/,'1 Portion:80'],
+ [/^reis[^,]*,? roh$/,'1 Portion:75'],[/^reis[^,]*,? gekocht/,'1 Portion:180'],
+ [/^(\w*schokolade)( |,|$)(?!.*riegel)/,'1 Rippe:5;1 Tafel:100'],[/riegel/,'1 Riegel:45'],
+ [/^zucker (weiß|braun)/,'1 TL:4;1 EL:12'],[/^honig$/,'1 TL:8;1 EL:20'],[/marmelade|konfitüre|gelee/,'1 TL:10;1 EL:20'],
+ [/nougat|erdnussbutter|erdnusscreme/,'1 TL:10;1 EL:20'],[/^(milch|sahne|frucht|vanille|schokoladen)?eis(creme)?( |,|$)/,'1 Kugel:50'],
+ [/keks|plätzchen/,'1 Stück:8'],[/(?<!pfann|reibe|leb|eier)kuchen( |,|\(|$)|torte( |,|\(|$)|strudel/,'1 Stück:100'],
+ [/^pizza (?!.*teig)/,'1 Pizza:350;1 Stück:120'],
+ [/^(erdnuss|haselnuss|walnuss|mandel|cashew|pistazie|paranuss|pekannuss|macadamia)(?!.*(öl|butter|drink|creme|milch))/,'1 Handvoll:25'],
+ [/öl$/,'1 EL:10;1 TL:4'],[/^(mayonnaise|ketchup|tomatenketchup|remoulade)/,'1 EL:15'],[/^senf/,'1 TL:5'],
+ [/^(weizenmehl|roggenmehl|mehl)( |,|$)/,'1 EL:10'],
+ [/^(\w*bier|hefeweizen|pilsner|radler|kölsch)(?!wurst|schinken|suppe)( |\/|,|$)/,'1 Flasche (0,5 l):500;1 Glas (0,3 l):300;1 Maß (1 l):1000'],
+ [/^(rot|weiß|rosé)?wein( |,|$)/,'1 Glas (125 ml):125'],[/^kaffee \(getränk\)/,'1 Tasse (150 ml):150'],[/^tee \(getränk\)|^tee, aufguss/,'1 Tasse (200 ml):200'],
+ [/^(?!.*(eigenen saft|konserve|pulver|brei|dick|likör|honig)).*(saft|nektar|limonade|schorle)( |,|$)|^cola/,'1 Glas (200 ml):200;1 Flasche (0,5 l):500'],
+ [/^(?!.*(bouillon|brühe|pulver|instant|trocken|einlage|würfel|grundlage|paste|suppenhuhn|suppengrün|suppenkraut|suppenfleisch)).*(suppe|eintopf)/,'1 Teller:300']
+];
+function blsPortions(nm){
+  nm=nm.toLowerCase();
+  for(const [re,s] of PR)if(re.test(nm))return s.split(';').map(x=>{const i=x.lastIndexOf(':');return{n:x.slice(0,i),g:+x.slice(i+1)}});
+  return[];
+}
 function localSearch(q){
   const ws=q.toLowerCase().split(/\s+/).filter(Boolean),pool={...cache};
   for(const [k,x] of Object.entries(db.items))if(!k.startsWith('gen:')&&!k.startsWith('bls:')&&!pool[k])pool[k]={key:k,...x};
@@ -421,7 +469,7 @@ function fillUnits(s){
 }
 function openPick(it){
   cur=it;const st=db.items[it.key];
-  pts=[...(it.pt||[]),...((st&&st.pt)||[])].filter((x,i,a)=>a.findIndex(y=>y.n===x.n&&y.g===x.g)===i);
+  pts=[...(it.pt||[]),...(String(it.key).startsWith('bls:')?blsPortions(it.n):[]),...((st&&st.pt)||[])].filter((x,i,a)=>a.findIndex(y=>y.n===x.n&&y.g===x.g)===i);
   const li=st&&st.lu&&st.lu!=='g'?pts.findIndex(x=>x.n+'|'+x.g===st.lu):-1;
   fillUnits(li>=0?li:'g');
   $('#gr').value=li>=0?(st.lq||1):(st&&st.lu==='g'&&st.lq?st.lq:100);
