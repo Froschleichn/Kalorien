@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <script>
-var VERSION=15;
+var VERSION=16;
 window.__live=0;
 (function(){try{
   var l=JSON.parse(localStorage.getItem('liveapp')||'null');
@@ -67,7 +67,7 @@ input[type=date]{min-height:44px}
 
 <div class="card">
   <div class="row sp" style="flex-wrap:wrap;gap:8px"><div><span class="big" id="tot">0</span> <span class="mu">/ <span id="goal"></span> kcal</span></div>
-  <div class="row" style="gap:6px"><button class="g" id="stat">Übersicht</button><button class="g" id="wbtn">Gewicht</button><button class="g" id="setg">Ziel</button></div></div>
+  <div class="row" style="gap:6px"><button class="g" id="stat">Übersicht</button><button class="g" id="setg">Ziel</button><button class="g" id="wbtn">Gewicht</button></div></div>
   <div class="bar" id="bar"><i></i></div>
   <div class="m mu"><div><b id="p">0</b> g<br>Eiweiß</div><div><b id="c">0</b> g<br>Kohlenhydrate</div><div><b id="f">0</b> g<br>Fett</div></div>
 </div>
@@ -507,8 +507,12 @@ $('#pok').onclick=()=>{
 function renderProg(all){
   const el=$('#wprog'),P=PROF(),last=all[all.length-1];
   if(!last){el.innerHTML='';return}
-  const head=`<div class="row sp"><h2 style="margin:0">Zielprognose</h2><button class="g" id="pedit">${P.h>0?'Annahmen':'Größe eintragen'}</button></div>`,msg=t=>{el.innerHTML=`<div class="card">${head}<div style="margin-top:8px">${t}</div></div>`;$('#pedit').onclick=openProf};
+  let gw='';
+  const head=`<div class="row sp"><h2 style="margin:0">Zielprognose</h2><button class="g" id="pedit">${P.h>0?'Annahmen':'Größe eintragen'}</button></div>`,msg=t=>{el.innerHTML=`<div class="card">${head}<div style="margin-top:8px">${t}</div>${gw}</div>`;$('#pedit').onclick=openProf};
   if(!(P.h>0))return msg('<span class="mu">Trage einmalig deine Größe ein, damit die App deinen Kalorienverbrauch (TDEE) berechnen kann.</span>');
+  {const tg=db.goal,tn=bmr(last.kg)*P.act,low=tn-tg,st='<div style="margin-top:8px;color:var(--bad);font-size:13px">';
+   if(low>1000)gw=`${st}Hinweis: Dein Tagesziel von ${tg} kcal liegt ${Math.round(low)} kcal unter deinem Verbrauch (${Math.round(tn)} kcal). Ein so starkes Defizit ist schwer durchzuhalten, langsamer abzunehmen ist meist gesünder.</div>`;
+   else if(tg<1500)gw=`${st}Hinweis: Dein Tagesziel von ${tg} kcal ist sehr niedrig. Weniger als 1500 kcal pro Tag sind für einen Mann auf Dauer meist zu wenig.</div>`;}
   const goal=db.wgoal;if(!(goal>0))return msg('<span class="mu">Lege oben rechts bei „Ziel“ ein Zielgewicht fest.</span>');
   const t0=dayN(iso(new Date())),by={};
   db.e.forEach(e=>{const n=dayN(e.d);if(n>t0-14&&n<=t0)by[e.d]=(by[e.d]||0)+e.k});
@@ -517,7 +521,7 @@ function renderProg(all){
   const avgL=ds.reduce((a,b)=>a+b,0)/n,p=n/14,w0=last.kg,B=bmr(w0),tdee=B*P.act,avg=p*avgL+(1-p)*tdee,bal=avg-tdee,dir=goal<w0?-1:1,diff=Math.abs(w0-goal);
   const rows=`<div class="mu" style="margin-top:8px;line-height:1.7">Gewicht ${nf(w0)} kg · Größe ${P.h} cm · Alter ${P.age}<br>Grundumsatz: <b style="color:var(--tx)">${Math.round(B)} kcal</b> · Gesamtumsatz (TDEE): <b style="color:var(--tx)">${Math.round(tdee)} kcal</b><br>Ø Aufnahme: <b style="color:var(--tx)">${Math.round(avg)} kcal</b> (${n} von 14 Tagen erfasst mit Ø ${Math.round(avgL)} kcal, übrige Tage = Verbrauch) · ${bal<0?'Defizit':'Überschuss'}: <b style="color:var(--tx)">${Math.abs(Math.round(bal))} kcal/Tag</b></div>`;
   const foot='<div class="mu" style="margin-top:8px;font-size:12px">Schätzung: 7700 kcal entsprechen etwa 1 kg Körpergewicht, der Verbrauch sinkt mit dem Gewicht. Tage ohne Einträge zählen mit deinem Verbrauch (Gewicht bleibt gleich). Unvollständig eingetragene Tage verfälschen den Schnitt.</div>';
-  const out=(big,sub)=>{el.innerHTML=`<div class="card">${head}<div style="margin-top:10px"><div style="font-size:24px;font-weight:700">${big}</div><div class="mu">${sub}</div></div>${rows}${foot}</div>`;$('#pedit').onclick=openProf};
+  const out=(big,sub)=>{el.innerHTML=`<div class="card">${head}<div style="margin-top:10px"><div style="font-size:24px;font-weight:700">${big}</div><div class="mu">${sub}</div>${gw}</div>${rows}${foot}</div>`;$('#pedit').onclick=openProf};
   if(diff<0.05)return out('Ziel erreicht 🎉','Dein aktuelles Gewicht liegt am Zielgewicht.');
   const eq=(avgL/P.act-6.25*P.h+5*P.age-5)/10;
   if(dir<0?eq>=goal:eq<=goal)return out('Mit diesem Schnitt nicht erreichbar',`Bei Ø ${Math.round(avgL)} kcal an erfassten Tagen pendelt sich dein Gewicht bei etwa ${nf(eq)} kg ein, weil der Verbrauch mit dem Gewicht sinkt. Für ${nf(goal)} kg musst du ${dir<0?'weniger':'mehr'} essen.`);
@@ -525,8 +529,7 @@ function renderProg(all){
   if(d>=3650)return out('Dauert sehr lange',`Nur ${n} von 14 Tagen sind erfasst, die übrigen zählen als Erhaltung, deshalb ändert sich dein Gewicht kaum. Trage mehr Tage ein oder iss an erfassten Tagen weniger.`);
   const dt=new Date();dt.setDate(dt.getDate()+d);
   const wk=d>=14?`ca. ${Math.round(d/7)} Wochen`:`${d} Tage`,mo=d>=60?` (≈ ${nf(d/30.4)} Monate)`:'';
-  let warn='';if(dir<0&&(avgL<1500||tdee-avgL>1000))warn='<div style="margin-top:6px;color:var(--bad);font-size:13px">Hinweis: Das ist ein sehr starkes Defizit. Langsamer abzunehmen ist meist gesünder und leichter durchzuhalten.</div>';
-  out(wk+mo,`bis ${dt.toLocaleDateString('de-DE',{day:'numeric',month:'long',year:'numeric'})} · ${nf(diff)} kg ${dir<0?'abnehmen':'zunehmen'} (≈ ${nf(Math.abs(bal)*7/7700)} kg pro Woche am Anfang)`+warn);
+  out(wk+mo,`bis ${dt.toLocaleDateString('de-DE',{day:'numeric',month:'long',year:'numeric'})} · ${nf(diff)} kg ${dir<0?'abnehmen':'zunehmen'} (≈ ${nf(Math.abs(bal)*7/7700)} kg pro Woche am Anfang)`);
 }
 
 // Gewicht: eigene Seite, ein manueller Wert pro Tag, Verlaufsgrafik mit 7-Tage-Trend
