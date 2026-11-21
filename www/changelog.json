@@ -1,5 +1,11 @@
 [
  {
+  "v": 37,
+  "name": "2026.11.21.3",
+  "date": "2026-11-21",
+  "notes": "Verlauf ist jetzt ein eigener Reiter statt Popup"
+ },
+ {
   "v": 36,
   "name": "2026.11.21.2",
   "date": "2026-11-21",
