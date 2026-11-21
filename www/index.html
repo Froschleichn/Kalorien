@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <script>
-var VERSION=35;
-var VERSION_NAME='2026.11.21.1';
+var VERSION=36;
+var VERSION_NAME='2026.11.21.2';
 window.__live=0;
 (function(){try{
   var l=JSON.parse(localStorage.getItem('liveapp')||'null');
@@ -87,7 +87,7 @@ h2+.it{border-top:0}
 #wpage button{white-space:nowrap}
 .foot button{background:none;color:var(--mu);border:0;padding:8px 4px;font-size:14px}
 .fab{position:fixed;left:calc(max(16px,calc(50% - 264px)) + 58px);right:max(16px,calc(50% - 264px));bottom:16px;height:48px;border-radius:16px;padding:0 20px;font-weight:650;background:var(--fab);color:var(--fabtx);box-shadow:0 8px 22px -8px #1d223399}
-.fabs{left:max(16px,calc(50% - 264px));right:auto;width:48px;padding:0;font-size:20px;background:var(--card);color:var(--tx);border:1px solid var(--ln)}
+.fabs{left:max(16px,calc(50% - 264px));right:auto;width:48px;padding:0;display:flex;align-items:center;justify-content:center;background:var(--card);color:var(--tx);border:1px solid var(--ln)}
 dialog{width:min(540px,96vw);border:0;border-radius:16px;padding:14px;background:var(--card);color:var(--tx);max-height:90vh}
 dialog::backdrop{background:#0008}
 .res{padding:10px 0;border-top:1px solid var(--ln);cursor:pointer}
@@ -132,7 +132,7 @@ input[type=date]{min-height:44px}
 </div>
 <div class="mu" style="text-align:center;font-size:12px;margin-top:4px"><span id="ver"></span> <span id="ust"></span> <a href="#" id="vsel" style="color:var(--ac)">· Versionen</a></div>
 
-<button class="fab fabs" id="addscan" aria-label="Barcode scannen">📷</button>
+<button class="fab fabs" id="addscan" aria-label="Barcode scannen"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="display:block"><path d="M4 8.5A1.5 1.5 0 0 1 5.5 7h2l1.2-2h6.6l1.2 2h2A1.5 1.5 0 0 1 20 8.5v9a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 17.5z"/><circle cx="12" cy="13" r="3.4"/></svg></button>
 <button class="fab" id="add">+ Hinzufügen</button>
 
 <dialog id="dlg">
