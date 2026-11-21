@@ -1,5 +1,11 @@
 [
  {
+  "v": 35,
+  "name": "2026.11.21.1",
+  "date": "2026-11-21",
+  "notes": "Scan-Button neben Hinzufuegen: oeffnet direkt die Kamera"
+ },
+ {
   "v": 34,
   "name": "2026.11.20.22",
   "date": "2026-11-20",

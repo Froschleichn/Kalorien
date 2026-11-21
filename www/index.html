@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <script>
-var VERSION=34;
-var VERSION_NAME='2026.11.20.22';
+var VERSION=35;
+var VERSION_NAME='2026.11.21.1';
 window.__live=0;
 (function(){try{
   var l=JSON.parse(localStorage.getItem('liveapp')||'null');
@@ -86,7 +86,8 @@ h2+.it{border-top:0}
 .foot{display:flex;justify-content:center;gap:18px;margin-top:6px}
 #wpage button{white-space:nowrap}
 .foot button{background:none;color:var(--mu);border:0;padding:8px 4px;font-size:14px}
-.fab{position:fixed;left:max(16px,calc(50% - 264px));right:max(16px,calc(50% - 264px));bottom:16px;height:48px;border-radius:16px;padding:0 20px;font-weight:650;background:var(--fab);color:var(--fabtx);box-shadow:0 8px 22px -8px #1d223399}
+.fab{position:fixed;left:calc(max(16px,calc(50% - 264px)) + 58px);right:max(16px,calc(50% - 264px));bottom:16px;height:48px;border-radius:16px;padding:0 20px;font-weight:650;background:var(--fab);color:var(--fabtx);box-shadow:0 8px 22px -8px #1d223399}
+.fabs{left:max(16px,calc(50% - 264px));right:auto;width:48px;padding:0;font-size:20px;background:var(--card);color:var(--tx);border:1px solid var(--ln)}
 dialog{width:min(540px,96vw);border:0;border-radius:16px;padding:14px;background:var(--card);color:var(--tx);max-height:90vh}
 dialog::backdrop{background:#0008}
 .res{padding:10px 0;border-top:1px solid var(--ln);cursor:pointer}
@@ -131,6 +132,7 @@ input[type=date]{min-height:44px}
 </div>
 <div class="mu" style="text-align:center;font-size:12px;margin-top:4px"><span id="ver"></span> <span id="ust"></span> <a href="#" id="vsel" style="color:var(--ac)">· Versionen</a></div>
 
+<button class="fab fabs" id="addscan" aria-label="Barcode scannen">📷</button>
 <button class="fab" id="add">+ Hinzufügen</button>
 
 <dialog id="dlg">
@@ -296,6 +298,7 @@ $('#setg').onclick=()=>{const v=parseInt(prompt('Tagesziel (kcal):',db.goal));if
 function addEntry(o){db.e.push({id:Date.now().toString(36)+Math.random().toString(36).slice(2,6),d:day,m:$('#meal').value,...o});save();render();closeD()}
 function closeD(){stopScan();$('#dlg').close();$('#res').innerHTML='';$('#pick').hidden=true;$('#q').value=''}
 $('#add').onclick=()=>{$('#dlg').showModal();showFav()};
+$('#addscan').onclick=()=>{$('#dlg').showModal();showFav();$('#scan').click()};
 $('#cl').onclick=closeD;
 
 const OFF='https://world.openfoodfacts.org';
@@ -549,7 +552,7 @@ $('#mok').onclick=()=>{
 // Barcode-Scanner: nativ (BarcodeDetector, Chrome/Android) oder ZXing-Fallback (iPhone/Safari, Firefox)
 let zx=null,zxP=null;
 function loadZX(){return zxP||(zxP=new Promise((ok,no)=>{const e=document.createElement('script');e.src='zxing.min.js';e.onload=ok;e.onerror=no;document.head.appendChild(e)}))}
-if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia)$('#scan').hidden=true;
+if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){$('#scan').hidden=true;$('#addscan').hidden=true}
 function stopScan(){
   if(zx){try{zx.reset()}catch(e){}zx=null}
   if(stream){stream.getTracks().forEach(t=>t.stop());stream=null}
