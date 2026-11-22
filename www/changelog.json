@@ -1,5 +1,11 @@
 [
  {
+  "v": 42,
+  "name": "2026.11.23.3",
+  "date": "2026-11-23",
+  "notes": "Hinzufügen-Fenster: oben nach unten wischen schließt es"
+ },
+ {
   "v": 41,
   "name": "2026.11.23.2",
   "date": "2026-11-23",

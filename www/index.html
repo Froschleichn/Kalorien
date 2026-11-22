@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <script>
-var VERSION=41;
-var VERSION_NAME='2026.11.23.2';
+var VERSION=42;
+var VERSION_NAME='2026.11.23.3';
 window.__live=0;
 (function(){try{
   var l=JSON.parse(localStorage.getItem('liveapp')||'null');
@@ -102,7 +102,7 @@ dialog{width:min(540px,96vw);border:0;border-radius:16px;padding:14px;background
 dialog::backdrop{background:#0008}
 #dlg{margin:auto auto 0;width:100%;max-width:560px;border-radius:26px 26px 0 0;padding:8px 16px calc(18px + env(safe-area-inset-bottom));max-height:92vh;overflow:auto;animation:shup .28s cubic-bezier(.2,.8,.2,1)}
 @keyframes shup{from{transform:translateY(40%);opacity:.4}to{transform:none;opacity:1}}
-.shd{outline:0;width:40px;height:5px;border-radius:3px;background:var(--ln);margin:0 auto 12px}
+.shd{outline:0;width:40px;height:5px;border-radius:3px;background:var(--ln);margin:0 auto 12px;box-sizing:content-box;padding:6px 40px;background-clip:content-box;margin-top:-6px;touch-action:none}
 #dlg .dt{font-size:20px;font-weight:700;letter-spacing:-.01em}#drem{font-size:13px;white-space:nowrap}
 .mseg{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:12px}
 .mseg button{background:var(--bg);color:var(--mu);border-radius:12px;padding:6px 0 7px;font-size:12px;line-height:1.2;box-shadow:inset 0 0 0 1.5px transparent}
@@ -202,7 +202,7 @@ input[type=date]{min-height:44px}
 <dialog id="dlg">
   <div class="shd" tabindex="-1" autofocus></div>
   <div class="nopk">
-    <div class="row sp" style="margin-bottom:12px"><b class="dt">Hinzufügen</b><div class="row" style="gap:10px"><span class="mu" id="drem"></span><button class="x" id="cl" aria-label="Schließen">×</button></div></div>
+    <div class="row sp dhead" style="margin-bottom:12px"><b class="dt">Hinzufügen</b><div class="row" style="gap:10px"><span class="mu" id="drem"></span><button class="x" id="cl" aria-label="Schließen">×</button></div></div>
     <select id="meal" hidden><option>Frühstück</option><option>Mittagessen</option><option>Abendessen</option><option>Snacks</option></select>
     <div class="mseg" id="mseg"></div>
     <div class="srch">
@@ -412,6 +412,26 @@ $('#add').onclick=()=>{$('#dlg').showModal();showFav()};
 $('#q').addEventListener('input',()=>{$('#go').hidden=!$('#q').value.trim()});
 $('#addscan').onclick=()=>{$('#dlg').showModal();showFav();$('#scan').click()};
 $('#cl').onclick=closeD;
+// Bottom-Sheet: oben (Griff/Kopfzeile) nach unten wischen schließt das Fenster
+(()=>{const d=$('#dlg');let y0=null,dy=0,t0=0;
+  d.addEventListener('touchstart',e=>{
+    if(e.touches.length!==1)return;const y=e.touches[0].clientY,top=d.getBoundingClientRect().top;
+    const head=e.target.closest('.shd,.dhead,.ptop')||y-top<44;
+    if(!head||(d.scrollTop>0&&!e.target.closest('.shd')))return;
+    y0=y;dy=0;t0=Date.now();d.style.transition='none';
+  },{passive:true});
+  d.addEventListener('touchmove',e=>{
+    if(y0==null)return;dy=Math.max(0,e.touches[0].clientY-y0);
+    if(dy>4){e.preventDefault();d.style.transform=`translateY(${dy}px)`}
+  },{passive:false});
+  const end=()=>{
+    if(y0==null)return;y0=null;const v=dy/Math.max(1,Date.now()-t0);
+    d.style.transition='transform .22s ease';
+    if(dy>110||(dy>40&&v>.6)){d.style.transform='translateY(100%)';setTimeout(()=>{closeD();d.style.transform='';d.style.transition=''},220)}
+    else{d.style.transform='';setTimeout(()=>{d.style.transition=''},230)}
+  };
+  d.addEventListener('touchend',end);d.addEventListener('touchcancel',end);
+})();
 
 const OFF='https://world.openfoodfacts.org';
 const FIELDS='code,product_name,brands,nutriments,serving_size,serving_quantity,quantity';
