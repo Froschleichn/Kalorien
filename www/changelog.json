@@ -1,5 +1,11 @@
 [
  {
+  "v": 41,
+  "name": "2026.11.23.2",
+  "date": "2026-11-23",
+  "notes": "Hinzufügen neu: Bottom-Sheet mit Mahlzeit-Buttons, Favoriten mit Schnell-Plus, Mengen-Ansicht mit Vorschau (übrige kcal, Eiweiß)"
+ },
+ {
   "v": 40,
   "name": "2026.11.23.1",
   "date": "2026-11-23",

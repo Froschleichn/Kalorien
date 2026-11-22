@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <script>
-var VERSION=40;
-var VERSION_NAME='2026.11.23.1';
+var VERSION=41;
+var VERSION_NAME='2026.11.23.2';
 window.__live=0;
 (function(){try{
   var l=JSON.parse(localStorage.getItem('liveapp')||'null');
@@ -100,7 +100,56 @@ h2+.it{border-top:0}
 .fabs{left:max(16px,calc(50% - 264px));right:auto;width:48px;padding:0;display:flex;align-items:center;justify-content:center;background:var(--card);color:var(--tx);border:1px solid var(--ln)}
 dialog{width:min(540px,96vw);border:0;border-radius:16px;padding:14px;background:var(--card);color:var(--tx);max-height:90vh}
 dialog::backdrop{background:#0008}
-.res{padding:10px 0;border-top:1px solid var(--ln);cursor:pointer}
+#dlg{margin:auto auto 0;width:100%;max-width:560px;border-radius:26px 26px 0 0;padding:8px 16px calc(18px + env(safe-area-inset-bottom));max-height:92vh;overflow:auto;animation:shup .28s cubic-bezier(.2,.8,.2,1)}
+@keyframes shup{from{transform:translateY(40%);opacity:.4}to{transform:none;opacity:1}}
+.shd{outline:0;width:40px;height:5px;border-radius:3px;background:var(--ln);margin:0 auto 12px}
+#dlg .dt{font-size:20px;font-weight:700;letter-spacing:-.01em}#drem{font-size:13px;white-space:nowrap}
+.mseg{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:12px}
+.mseg button{background:var(--bg);color:var(--mu);border-radius:12px;padding:6px 0 7px;font-size:12px;line-height:1.2;box-shadow:inset 0 0 0 1.5px transparent}
+.mseg button i{display:block;font-style:normal;font-size:18px;margin-bottom:1px}
+.mseg button.on{color:#1d2233;font-weight:650}
+.srch{display:flex;align-items:center;gap:6px;background:var(--bg);border-radius:14px;padding:0 5px 0 13px;height:50px;color:var(--mu);margin-bottom:6px}
+.srch input{border:0;background:none;padding:0;flex:1;min-width:0;outline:0;height:100%;color:var(--tx)}
+.srch input:focus-visible{outline:0}
+.srch #go{padding:0 12px;height:38px;border-radius:11px;font-size:14px;font-weight:600}
+.srch #scan{width:40px;height:40px;padding:0;border-radius:11px;display:grid;place-items:center;flex:none}
+.fh{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--mu);font-weight:600;margin:10px 0 2px}
+.fi{display:flex;align-items:center;gap:12px;padding:9px 0;border-bottom:1px solid var(--ln);cursor:pointer;color:var(--tx)}
+.av{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;font-size:19px;flex:none;font-weight:700;color:#1d2233}
+.fi .n{flex:1;min-width:0}.fi .n div{font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fi .n small{display:block;font-size:12.5px;color:var(--mu);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fi .qa{width:36px;height:36px;border-radius:50%;background:var(--hero);color:var(--ac);padding:0;font-size:22px;font-weight:600;flex:none;line-height:1}
+.res{padding:10px 0;border-bottom:1px solid var(--ln);cursor:pointer}
+.dft{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px}
+.dft button{background:none;border:1.5px dashed var(--ln);color:var(--mu);border-radius:14px;padding:11px 6px;font-size:14px;font-weight:600}
+.dft button.on{border-style:solid;border-color:var(--ac);color:var(--tx)}
+#dlg details{margin-top:10px}#dlg details summary{display:none}
+#dlg:has(#pick:not([hidden])) .nopk{display:none}
+.ptop{display:flex;align-items:center;gap:10px;margin:2px 0 12px}
+.pbk{font-size:28px;opacity:.8;padding:0 6px 0 0}.pst{font-size:24px;color:#f2b705;opacity:1;margin-left:auto}
+.ptop .av{width:48px;height:48px;border-radius:14px;font-size:24px}
+.pnm{min-width:0;flex:1}.pnm b{display:block;font-size:17px;line-height:1.2;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.pnm small{display:block;font-size:13px;color:var(--mu);margin-top:2px}
+.amt{display:flex;align-items:center;justify-content:center;gap:8px;margin:4px 0 2px}
+.amt .ab{width:46px;height:46px;border-radius:50%;background:var(--bg);color:var(--ac);padding:0;font-size:26px;font-weight:600;flex:none;line-height:1}
+.amt input{width:118px;border:0;background:none;text-align:right;font-size:40px;font-weight:700;letter-spacing:-.03em;padding:0;font-variant-numeric:tabular-nums;-moz-appearance:textfield}
+.amt input::-webkit-outer-spin-button,.amt input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.amt select{width:auto;max-width:140px;border:0;background:none;color:var(--mu);font-size:17px;padding:0 4px;text-overflow:ellipsis}
+.pg{text-align:center;font-size:13px;min-height:17px;margin-bottom:6px}
+.pch{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin-bottom:14px}
+.pch button{padding:6px 12px;border-radius:20px;background:var(--bg);font-size:13px;font-weight:600;color:var(--mu)}
+.pch button.on{background:var(--ac);color:var(--acx)}
+.vmac{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:12px}
+.vmac div{background:var(--bg);border-radius:14px;padding:8px 0;text-align:center;font-variant-numeric:tabular-nums}
+.vmac b{display:block;font-size:17px}.vmac small{font-size:11.5px;color:var(--mu)}.vmac .k{background:var(--hero)}
+.vpre{background:var(--bg);border-radius:16px;padding:11px 14px;margin-bottom:14px;font-size:13px;color:var(--mu);font-variant-numeric:tabular-nums}
+.vpre b{color:var(--tx)}.vpre b.ok{color:#2f9e5b}
+@media(prefers-color-scheme:dark){.vpre b.ok{color:#52c985}}
+.vbar{height:8px;border-radius:4px;background:var(--card);display:flex;overflow:hidden;margin:7px 0 8px}
+.vbar s{display:block;height:100%;transition:width .3s}#vb1{background:var(--ac)}#vb2{background:var(--ac);opacity:.45}
+.vpre.over #vb2{background:var(--bad);opacity:1}
+.okb{width:100%;height:52px;border-radius:16px;background:var(--fab);color:var(--fabtx);font-weight:650;font-size:16px}
+.lnk{display:block;margin:10px auto 0;background:none;color:var(--mu);font-size:13px;padding:4px}
 video{width:100%;border-radius:10px;margin-top:8px}
 .m{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center}
 #tabs{position:fixed;top:0;left:0;right:0;z-index:11;background:var(--bg)}
@@ -151,37 +200,50 @@ input[type=date]{min-height:44px}
 <button class="fab" id="add">+ Hinzufügen</button>
 
 <dialog id="dlg">
-  <div class="row sp"><b>Eintrag hinzufügen</b><button class="x" id="cl">×</button></div>
-  <div class="row" style="margin:10px 0">
-    <select id="meal"><option>Frühstück</option><option>Mittagessen</option><option>Abendessen</option><option>Snacks</option></select>
+  <div class="shd" tabindex="-1" autofocus></div>
+  <div class="nopk">
+    <div class="row sp" style="margin-bottom:12px"><b class="dt">Hinzufügen</b><div class="row" style="gap:10px"><span class="mu" id="drem"></span><button class="x" id="cl" aria-label="Schließen">×</button></div></div>
+    <select id="meal" hidden><option>Frühstück</option><option>Mittagessen</option><option>Abendessen</option><option>Snacks</option></select>
+    <div class="mseg" id="mseg"></div>
+    <div class="srch">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <input id="q" placeholder="Produkt oder Barcode" enterkeyhint="search" autocomplete="off">
+      <button id="go" hidden>Suchen</button>
+      <button id="scan" aria-label="Barcode scannen"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="display:block"><path d="M4 8V6a2 2 0 0 1 2-2h2M16 4h2a2 2 0 0 1 2 2v2M20 16v2a2 2 0 0 1-2 2h-2M8 20H6a2 2 0 0 1-2-2v-2M7 12h10"/></svg></button>
+    </div>
+    <video id="vid" playsinline muted hidden></video>
+    <div id="res" class="mu"></div>
+    <div class="dft"><button id="bman">✏️ Manuell</button><button id="bown">➕ Eigenes Produkt</button></div>
+    <details id="man_d"><summary></summary>
+      <div style="display:grid;gap:8px;margin-top:4px">
+        <input id="mn" placeholder="Name">
+        <input id="mk" type="number" inputmode="decimal" placeholder="kcal gesamt">
+        <div class="row"><input id="mp" type="number" inputmode="decimal" placeholder="Eiweiß g"><input id="mc" type="number" inputmode="decimal" placeholder="KH g"><input id="mf" type="number" inputmode="decimal" placeholder="Fett g"></div>
+        <button id="mok">Hinzufügen</button>
+      </div>
+    </details>
+    <details id="own_d"><summary></summary>
+      <div style="display:grid;gap:8px;margin-top:4px">
+        <div class="mu" style="font-size:13px">Nährwerte pro 100 g – das Produkt bleibt gespeichert.</div>
+        <input id="own_n" placeholder="Name (z. B. Putenbrust vom Metzger)">
+        <input id="own_k" type="text" inputmode="decimal" placeholder="kcal pro 100 g">
+        <div class="row"><input id="own_p" type="text" inputmode="decimal" placeholder="Eiweiß g"><input id="own_c" type="text" inputmode="decimal" placeholder="KH g"><input id="own_f" type="text" inputmode="decimal" placeholder="Fett g"></div>
+        <div class="row"><input id="own_pn" placeholder="Portion, optional (z. B. 1 Stück)"><input id="own_pg" type="text" inputmode="decimal" placeholder="g" style="max-width:80px"></div>
+        <div class="mu" id="own_m" style="font-size:12px"></div>
+        <button id="own_ok">Speichern und auswählen</button>
+      </div>
+    </details>
   </div>
-  <div class="row"><input id="q" placeholder="Produkt oder Barcode suchen" enterkeyhint="search"><button id="go">Suche</button><button class="g" id="scan">📷</button></div>
-  <video id="vid" playsinline muted hidden></video>
-  <div id="res" class="mu" style="margin-top:8px"></div>
   <div id="pick" hidden>
-    <div class="row sp"><b id="pn"></b><button class="x" id="pstar">☆</button></div>
-    <div class="row" style="margin:8px 0"><input id="gr" type="number" inputmode="decimal" step="any" value="100"><select id="un" style="width:auto;max-width:62%"></select></div>
-    <div class="mu" id="pv"></div>
-    <button id="ok" style="width:100%;margin-top:10px">Hinzufügen</button>
+    <div class="ptop"><button class="x pbk" id="pback" aria-label="Zurück">‹</button><div class="av" id="pav"></div><div class="pnm"><b id="pn"></b><small id="psub"></small></div><button class="x pst" id="pstar" aria-label="Favorit">☆</button></div>
+    <div class="amt"><button class="ab" id="gmin" aria-label="Weniger">−</button><input id="gr" type="number" inputmode="decimal" step="any" value="100"><select id="un"></select><button class="ab" id="gplu" aria-label="Mehr">+</button></div>
+    <div class="mu pg" id="pv"></div>
+    <div class="pch" id="pch"></div>
+    <div class="vmac"><div class="k"><b id="vk">0</b><small>kcal</small></div><div><b id="vp" style="color:var(--c1)">0</b><small>Eiweiß</small></div><div><b id="vc">0</b><small>KH</small></div><div><b id="vf">0</b><small>Fett</small></div></div>
+    <div class="vpre"><div class="row sp"><span>Danach noch übrig</span><b id="vrem"></b></div><div class="vbar"><s id="vb1"></s><s id="vb2"></s></div><div class="row sp" style="font-size:12.5px"><span>Eiweiß <b id="vpe" class="ok"></b></span><span id="vpg"></span></div></div>
+    <button id="ok" class="okb">Hinzufügen</button>
+    <button class="lnk" id="prm" hidden>Aus „Häufig verwendet“ entfernen</button>
   </div>
-  <details style="margin-top:12px"><summary class="mu">Manuell eintragen</summary>
-    <div style="display:grid;gap:8px;margin-top:8px">
-      <input id="mn" placeholder="Name">
-      <input id="mk" type="number" inputmode="decimal" placeholder="kcal gesamt">
-      <div class="row"><input id="mp" type="number" inputmode="decimal" placeholder="Eiweiß g"><input id="mc" type="number" inputmode="decimal" placeholder="KH g"><input id="mf" type="number" inputmode="decimal" placeholder="Fett g"></div>
-      <button id="mok">Hinzufügen</button>
-    </div>
-  </details>
-  <details id="own_d" style="margin-top:8px"><summary class="mu">Eigenes Produkt anlegen (pro 100 g)</summary>
-    <div style="display:grid;gap:8px;margin-top:8px">
-      <input id="own_n" placeholder="Name (z. B. Putenbrust vom Metzger)">
-      <input id="own_k" type="text" inputmode="decimal" placeholder="kcal pro 100 g">
-      <div class="row"><input id="own_p" type="text" inputmode="decimal" placeholder="Eiweiß g"><input id="own_c" type="text" inputmode="decimal" placeholder="KH g"><input id="own_f" type="text" inputmode="decimal" placeholder="Fett g"></div>
-      <div class="row"><input id="own_pn" placeholder="Portion, optional (z. B. 1 Stück)"><input id="own_pg" type="text" inputmode="decimal" placeholder="g" style="max-width:80px"></div>
-      <div class="mu" id="own_m" style="font-size:12px"></div>
-      <button id="own_ok">Speichern und auswählen</button>
-    </div>
-  </details>
 </dialog>
 
 <dialog id="edlg">
@@ -326,8 +388,28 @@ $('#list').onclick=e=>{const am=e.target.closest('.addm');if(am){$('#meal').valu
 $('#setg').onclick=()=>{const v=parseInt(prompt('Tagesziel (kcal):',db.goal));if(v>0){db.goal=v;db.gt=Date.now();save();render()}};
 
 function addEntry(o){db.e.push({id:Date.now().toString(36)+Math.random().toString(36).slice(2,6),d:day,m:$('#meal').value,...o});save();render();closeD()}
-function closeD(){stopScan();$('#dlg').close();$('#res').innerHTML='';$('#pick').hidden=true;$('#q').value=''}
+function closeD(){stopScan();$('#dlg').close();$('#res').innerHTML='';$('#pick').hidden=true;$('#q').value='';$('#go').hidden=true;$('#man_d').open=$('#own_d').open=false;syncFt()}
+const MSEG={'Frühstück':['🥣','Frühstück','#fff1cf','#f2b705'],'Mittagessen':['🍽️','Mittag','#dcf5e6','#2fb36d'],'Abendessen':['🌙','Abend','#e4e7ff','#6f7cf0'],'Snacks':['🍎','Snack','#ffe3dd','#ff7a5c']};
+function syncSeg(){
+  const v=$('#meal').value;
+  $('#mseg').innerHTML=MEALS.map(m=>{const[ic,l,bg,bc]=MSEG[m];return`<button data-m="${m}"${m===v?` class="on" style="background:${bg};box-shadow:inset 0 0 0 1.5px ${bc}"`:''}><i>${ic}</i>${l}</button>`}).join('');
+  const t=dayTot(),rem=db.goal-Math.round(t.k);$('#drem').textContent=rem>=0?rem+' kcal übrig':-rem+' kcal drüber';
+}
+$('#mseg').onclick=e=>{const b=e.target.closest('button');if(b){$('#meal').value=b.dataset.m;syncSeg();if(!$('#pick').hidden)upd()}};
+function dayTot(){const es=db.e.filter(e=>e.d===day),s=k=>es.reduce((a,e)=>a+e[k],0);return{k:s('k'),p:s('p')}}
+function syncFt(){$('#bman').classList.toggle('on',$('#man_d').open);$('#bown').classList.toggle('on',$('#own_d').open)}
+$('#bman').onclick=()=>{const o=!$('#man_d').open;$('#man_d').open=o;$('#own_d').open=false;syncFt();if(o)setTimeout(()=>$('#mn').focus(),50)};
+$('#bown').onclick=()=>{const o=!$('#own_d').open;$('#own_d').open=o;$('#man_d').open=false;syncFt();if(o)setTimeout(()=>$('#own_n').focus(),50)};
+const EMO=[[/skyr|quark|joghurt|milch|kefir|buttermilch/,'🥛'],[/brot|toast|brötchen|semmel|baguette/,'🍞'],[/apfel/,'🍎'],[/banane/,'🍌'],[/birne/,'🍐'],[/beere|erdbeer/,'🍓'],[/orange|mandarine/,'🍊'],[/traube/,'🍇'],[/hähnchen|haehnchen|huhn|pute|geflügel|chicken/,'🍗'],[/pizza|piccolini/,'🍕'],[/käse|kaese|cheese|gouda|mozzarella|feta/,'🧀'],[/\bei\b|eier|hühnerei/,'🥚'],[/bier|pils|weizen|radler|helles/,'🍺'],[/wein|sekt/,'🍷'],[/nudel|pasta|spaghetti|teigwaren/,'🍝'],[/reis/,'🍚'],[/thunfisch|lachs|fisch|hering|forelle/,'🐟'],[/salami|wurst|schinken|speck|leberkäse/,'🥓'],[/rind|schwein|hack|steak|fleisch|schnitzel/,'🥩'],[/schoko|kakao|nutella/,'🍫'],[/keks|kuchen|waffel|gebäck/,'🍪'],[/nuss|nüsse|mandel|erdnuss|cashew/,'🥜'],[/kaffee|cappuccino|latte/,'☕'],[/salat|gurke|tomate|paprika|gemüse|brokkoli|broccoli|karotte|möhre/,'🥗'],[/kartoffel|pommes/,'🥔'],[/müsli|hafer|flocken|cornflakes/,'🥣'],[/burger/,'🍔'],[/eis\b|eiscreme/,'🍨'],[/saft|cola|limo|getränk/,'🥤']];
+const AVB=['#e4e7ff','#fff1cf','#ffe3dd','#dcf5e6','#e1f1fb','#f3e4fb'];
+function avatar(n){const s=String(n).toLowerCase(),m=EMO.find(([re])=>re.test(s));let hs=0;for(const ch of s)hs=(hs*31+ch.charCodeAt(0))|0;
+  return[m?m[1]:esc((String(n).trim()[0]||'?').toUpperCase()),AVB[Math.abs(hs)%AVB.length]]}
+function lastQty(x){
+  const pt=x.lu&&x.lu!=='g'?(x.pt||[]).find(y=>y.n+'|'+y.g===x.lu):null;
+  if(pt){const q=x.lq||1;return{g:q*pt.g,lab:(q===1?(/^\d/.test(pt.n)?'':'1 '):r(q)+' × ')+pt.n,pt,q}}
+  const g=x.lu==='g'&&x.lq?x.lq:100;return{g,lab:r(g)+' g',pt:null,q:g}}
 $('#add').onclick=()=>{$('#dlg').showModal();showFav()};
+$('#q').addEventListener('input',()=>{$('#go').hidden=!$('#q').value.trim()});
 $('#addscan').onclick=()=>{$('#dlg').showModal();showFav();$('#scan').click()};
 $('#cl').onclick=closeD;
 
@@ -466,7 +548,7 @@ function localSearch(q){
 }
 function renderRes(list,note){
   window._r=list;
-  $('#res').innerHTML=(note?`<div class="mu" style="margin:4px 0">${note}</div>`:'')+list.map((x,i)=>`<div class="res" data-i="${i}" style="color:var(--tx)">${esc(x.n)}<div class="mu">${Math.round(x.k)} kcal / 100 g${x.gen?' · Grundnahrungsmittel (Richtwert)':x.bls?' · BLS 4.0':String(x.key).startsWith('own:')?' · Eigenes Produkt':''}</div></div>`).join('');
+  $('#res').innerHTML=(note?`<div class="fh">${note}</div>`:'')+list.map((x,i)=>{const[a,bg]=avatar(x.n);return`<div class="fi res" data-i="${i}"><div class="av" style="background:${bg}">${a}</div><div class="n"><div>${esc(x.n)}</div><small>${Math.round(x.k)} kcal / 100 g${x.gen?' · Richtwert':x.bls?' · BLS 4.0':String(x.key).startsWith('own:')?' · Eigenes Produkt':''}</small></div></div>`}).join('');
 }
 const quick=q=>genSearch(q).slice(0,8).concat(blsSearch(q).slice(0,12)).concat(localSearch(q).filter(x=>String(x.key).startsWith('own:')));
 $('#q').oninput=()=>{
@@ -474,7 +556,7 @@ $('#q').oninput=()=>{
   if(!q){$('#pick').hidden=true;showFav();return}
   if(q.length<2||/^\d+$/.test(q))return;
   const l=quick(q);
-  if(l.length){$('#pick').hidden=true;renderRes(l,'Sofort-Treffer · „Suche“ tippen für Open Food Facts')}
+  if(l.length){$('#pick').hidden=true;renderRes(l,'Sofort-Treffer · „Suchen“ für Open Food Facts')}
   else $('#res').innerHTML='';
 };
 // Bei fehlender Verbindung mehrfach neu versuchen; erst nach 'ms' Millisekunden aufgeben (dann Offline-Hinweis)
@@ -524,10 +606,12 @@ const ug=()=>sel==='g'?1:pts[+sel].g;
 const ptLabel=x=>/\bg\b|ml/i.test(x.n)?x.n:`${x.n} (${r(x.g)} g)`;
 function ensureItem(it){return db.items[it.key]||(db.items[it.key]={n:it.n,k:it.k,p:it.p,c:it.c,f:it.f,pt:[],u:0,t:0,fav:false})}
 function showFav(){
+  syncSeg();
   const l=Object.entries(db.items).filter(([k,x])=>x.fav||x.u>0)
     .sort((a,b)=>(b[1].fav-a[1].fav)||(b[1].u-a[1].u)||(b[1].t-a[1].t)).slice(0,12).map(([k,x])=>({key:k,...x}));
   window._r=l;
-  $('#res').innerHTML=l.length?'<div class="mu" style="margin:4px 0">Häufig verwendet</div>'+l.map((x,i)=>`<div class="row" style="border-top:1px solid var(--ln)"><div class="res" data-i="${i}" style="flex:1;border:0;color:var(--tx)">${x.fav?'★ ':''}${esc(x.n)}<div class="mu">${Math.round(x.k)} kcal / 100 g${x.u?' · '+x.u+'×':''}</div></div><button class="x" data-rm="${esc(x.key)}">×</button></div>`).join(''):'';
+  $('#res').innerHTML=l.length?'<div class="fh">Häufig verwendet</div>'+l.map((x,i)=>{const[a,bg]=avatar(x.n),q=lastQty(x),f=q.g/100;
+    return`<div class="fi res" data-i="${i}"><div class="av" style="background:${bg}">${a}</div><div class="n"><div>${esc(x.n)}${x.fav?' ★':''}</div><small>${esc(q.lab)} · ${Math.round(x.k*f)} kcal${x.p*f>=3?' · '+Math.round(x.p*f)+' g Eiweiß':''}</small></div><button class="qa" data-qa="${i}" aria-label="${esc(x.n)} mit ${esc(q.lab)} hinzufügen">+</button></div>`}).join(''):'<div class="mu" style="padding:14px 0;text-align:center">Suche ein Produkt oder scanne einen Barcode.</div>';
 }
 function fillUnits(s){
   $('#un').innerHTML='<option value="g">g</option>'+pts.map((x,i)=>`<option value="${i}">${esc(ptLabel(x))}</option>`).join('')+'<option value="+">+ Eigene Portion …</option>';
@@ -540,18 +624,37 @@ function openPick(it){
   fillUnits(li>=0?li:'g');
   $('#gr').value=li>=0?(st.lq||1):(st&&st.lu==='g'&&st.lq?st.lq:100);
   $('#pn').textContent=it.n;$('#pstar').textContent=st&&st.fav?'★':'☆';
-  $('#pick').hidden=false;$('#res').innerHTML='';upd();
+  const[a,bg]=avatar(it.n);$('#pav').innerHTML=a;$('#pav').style.background=bg;$('#prm').hidden=!st;
+  stopScan();$('#pick').hidden=false;$('#res').innerHTML='';$('#dlg').scrollTop=0;upd();
 }
 $('#res').onclick=e=>{
-  const rm=e.target.dataset.rm;
-  if(rm){delete db.items[rm];save();showFav();return}
+  const qa=e.target.closest('[data-qa]');
+  if(qa){const x=window._r[qa.dataset.qa],st=db.items[x.key],q=lastQty(x),f=q.g/100;
+    Object.assign(st,{u:(st.u||0)+1,t:Date.now()});
+    addEntry({n:x.n,g:r(q.g),u:q.pt?`${r(q.q)} × ${q.pt.n}`:'',k:x.k*f,p:x.p*f,c:x.c*f,f:x.f*f});return}
   const el=e.target.closest('.res');if(!el)return;
   openPick(window._r[el.dataset.i]);
 };
 function upd(){
-  const g=(+$('#gr').value||0)*ug(),f=g/100;
-  $('#pv').textContent=(sel==='g'?'':`= ${r(g)} g · `)+`${Math.round(cur.k*f)} kcal · E ${r(cur.p*f)} g · KH ${r(cur.c*f)} g · F ${r(cur.f*f)} g`;
+  const g=(+$('#gr').value||0)*ug(),f=g/100,m=$('#meal').value,k=cur.k*f;
+  $('#pv').textContent=sel==='g'?'':`= ${r(g)} g`;
+  $('#psub').textContent=`${Math.round(cur.k)} kcal / 100 g · ${MSEG[m][0]} ${MSEG[m][1]}`;
+  $('#vk').textContent=Math.round(k);$('#vp').textContent=r(cur.p*f);$('#vc').textContent=r(cur.c*f);$('#vf').textContent=r(cur.f*f);
+  const t=dayTot(),rem=Math.round(db.goal-t.k-k),G=db.goal||1;
+  $('#vrem').textContent=rem>=0?rem+' kcal':-rem+' kcal drüber';$('.vpre').classList.toggle('over',rem<0);
+  const a=Math.min(100,t.k/G*100);$('#vb1').style.width=a+'%';$('#vb2').style.width=Math.max(0,Math.min(100-a,k/G*100))+'%';
+  $('#vpe').textContent=`${Math.round(t.p)} → ${Math.round(t.p+cur.p*f)} g`;$('#vpg').textContent='Ziel '+macroGoals().p+' g';
+  $('#ok').textContent=`Zu ${MSEG[m][1]} hinzufügen · ${Math.round(k)} kcal`;
+  const cv=(+$('#gr').value||0);
+  $('#pch').innerHTML=[50,100,150,250].map(v=>`<button data-c="g:${v}"${sel==='g'&&cv===v?' class="on"':''}>${v} g</button>`).join('')+
+    pts.slice(0,4).map((x,i)=>`<button data-c="${i}"${sel===String(i)&&cv===1?' class="on"':''}>${esc(/^\d/.test(x.n)?x.n:'1 '+x.n)}</button>`).join('');
 }
+$('#pch').onclick=e=>{const b=e.target.closest('button');if(!b)return;const c=b.dataset.c;
+  if(c.startsWith('g:')){sel='g';$('#un').value='g';$('#gr').value=c.slice(2)}else{sel=c;$('#un').value=c;$('#gr').value=1}upd()};
+const step=d=>{const v=+$('#gr').value||0,s=sel==='g'?(v<50||(v<=50&&d<0)?5:10):.5;$('#gr').value=r(Math.max(0,Math.round((v+d*s)/s)*s));upd()};
+$('#gmin').onclick=()=>step(-1);$('#gplu').onclick=()=>step(1);
+$('#pback').onclick=()=>{$('#pick').hidden=true;$('#q').value.trim()?$('#q').oninput():showFav()};
+$('#prm').onclick=()=>{if(cur&&db.items[cur.key]&&confirm('„'+cur.n+'“ aus der Liste entfernen?')){delete db.items[cur.key];save();$('#pick').hidden=true;showFav()}};
 $('#gr').oninput=upd;
 $('#un').onchange=()=>{
   const v=$('#un').value,prevG=(+$('#gr').value||0)*ug();
@@ -573,6 +676,7 @@ $('#ok').onclick=()=>{
   Object.assign(st,{n:cur.n,k:cur.k,p:cur.p,c:cur.c,f:cur.f,pt:pts.slice(),u:st.u+1,t:Date.now(),lu:pt?pt.n+'|'+pt.g:'g',lq:q});
   addEntry({n:cur.n,g:r(g),u:pt?`${r(q)} × ${pt.n}`:'',k:cur.k*f,p:cur.p*f,c:cur.c*f,f:cur.f*f});
 };
+$('#man_d').ontoggle=$('#own_d').ontoggle=syncFt;
 $('#mok').onclick=()=>{
   const k=+$('#mk').value;if(!k)return;
   addEntry({n:$('#mn').value||'Eintrag',g:0,k,p:+$('#mp').value||0,c:+$('#mc').value||0,f:+$('#mf').value||0});
