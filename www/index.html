@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <script>
-var VERSION=37;
-var VERSION_NAME='2026.11.21.3';
+var VERSION=38;
+var VERSION_NAME='2026.11.22.1';
 window.__live=0;
 (function(){try{
   var l=JSON.parse(localStorage.getItem('liveapp')||'null');
@@ -192,7 +192,7 @@ input[type=date]{min-height:44px}
       <div class="mu" id="wh" style="margin-top:6px;font-size:12px">Pro Tag zählt ein Wert, ein neuer Eintrag für denselben Tag ersetzt den alten.</div>
     </div>
     <div class="card">
-      <div class="row" style="margin-bottom:8px"><button class="wtab g" data-r="30" style="flex:1">30 Tage</button><button class="wtab g" data-r="90" style="flex:1">90 Tage</button><button class="wtab g" data-r="365" style="flex:1">Jahr</button><button class="wtab g" data-r="0" style="flex:1">Alles</button></div>
+      <div class="row" style="margin-bottom:8px;gap:6px"><button class="wtab g" data-r="30" style="flex:1;min-width:0;padding-left:4px;padding-right:4px">30 T</button><button class="wtab g" data-r="90" style="flex:1;min-width:0;padding-left:4px;padding-right:4px">90 T</button><button class="wtab g" data-r="365" style="flex:1;min-width:0;padding-left:4px;padding-right:4px">Jahr</button><button class="wtab g" data-r="0" style="flex:1;min-width:0;padding-left:4px;padding-right:4px">Alles</button><button class="wtab g" data-r="-1" style="flex:1;min-width:0;padding-left:4px;padding-right:4px">Bis Ziel</button></div>
       <div id="wchart"></div>
     </div>
     <div id="wstats"></div>
@@ -768,27 +768,50 @@ db.w=db.w||[];let wr=90;
 const nf=v=>(Math.round(v*10)/10).toLocaleString('de-DE',{minimumFractionDigits:1,maximumFractionDigits:1});
 const dmy=(t,y)=>{const d=D(t);return d.getDate()+'.'+(d.getMonth()+1)+'.'+(y?String(d.getFullYear()).slice(2):'')};
 const dayN=t=>{const a=t.split('-').map(Number);return Math.round(Date.UTC(a[0],a[1]-1,a[2])/864e5)};
+// Plan- und Prognoselinie: Gewicht Tag für Tag fortschreiben (7700 kcal ≈ 1 kg, Verbrauch sinkt mit dem Gewicht)
+// Plan: ab dem ersten Gewichtseintrag jeden Tag genau das Tagesziel gegessen. Prognose: ab dem letzten Eintrag mit dem Schnitt der letzten 14 Tage.
+function simW(n0,w0,goal,intake,frac){
+  const P=PROF(),dir=goal<w0?-1:1,out=[{n:n0,v:w0}];let w=w0,d=0;
+  while(d<1500&&(dir<0?w>goal:w<goal)){w+=frac*(intake-bmr(w)*P.act)/7700;d++;out.push({n:n0+d,v:w})}
+  return{pts:out,hit:dir<0?w<=goal:w>=goal};
+}
+function wLines(all){
+  const P=PROF(),goal=db.wgoal;if(!(P.h>0)||!(goal>0)||!all.length)return{};
+  const f=all[0],l=all[all.length-1],res={};
+  if(Math.abs(f.kg-goal)>=0.05)res.plan=simW(dayN(f.d),f.kg,goal,db.goal,1);
+  const t0=dayN(iso(new Date())),by={};
+  db.e.forEach(e=>{const n=dayN(e.d);if(n>t0-14&&n<=t0)by[e.d]=(by[e.d]||0)+e.k});
+  const ds=Object.values(by);
+  if(ds.length&&Math.abs(l.kg-goal)>=0.05)res.fc=simW(dayN(l.d),l.kg,goal,ds.reduce((a,b)=>a+b,0)/ds.length,ds.length/14);
+  return res;
+}
 function renderWeight(){
   const all=db.w.slice().sort((a,b)=>a.d<b.d?-1:1),today=iso(new Date());
   document.querySelectorAll('.wtab').forEach(t=>t.className='wtab'+(+t.dataset.r===wr?'':' g'));
   const cut=wr>0?iso(new Date(new Date().getFullYear(),new Date().getMonth(),new Date().getDate()-wr)):'';
-  const pts=wr>0?all.filter(x=>x.d>=cut):all;
+  const pts=wr>0?all.filter(x=>x.d>=cut):all,WL=wLines(all);
   // Chart
   if(!pts.length){$('#wchart').innerHTML='<div class="mu" style="padding:24px 0;text-align:center">'+(all.length?'Keine Einträge in diesem Zeitraum.':'Noch keine Gewichtswerte. Trage oben deinen ersten Wert ein.')+'</div>'}
   else{
-    const W=340,H=190,L=38,R=10,T=12,B=26,t0=wr>0?dayN(cut):dayN(pts[0].d),t1=Math.max(dayN(today),dayN(pts[pts.length-1].d)),span=Math.max(1,t1-t0);
-    const wg=db.wgoal>0?db.wgoal:null,vs=pts.map(x=>x.kg).concat(wg?[wg]:[]);
+    const W=340,H=190,L=38,R=10,T=12,B=26,t0=wr>0?dayN(cut):dayN(pts[0].d),t1x=Math.max(dayN(today),dayN(pts[pts.length-1].d)),t1=wr<0?Math.min(t0+1100,Math.max(t1x,...[WL.plan,WL.fc].filter(Boolean).map(s=>s.pts[s.pts.length-1].n))):t1x,span=Math.max(1,t1-t0);
+    const vis=s=>s?s.pts.filter(q=>q.n>=t0&&q.n<=t1):[],pl=vis(WL.plan),fl=vis(WL.fc);
+    const wg=db.wgoal>0?db.wgoal:null,vs=pts.map(x=>x.kg).concat(wg?[wg]:[],pl.map(q=>q.v),fl.map(q=>q.v));
     let lo=Math.min(...vs),hi=Math.max(...vs);const pad=Math.max(0.5,(hi-lo)*0.12);lo=Math.floor((lo-pad)*2)/2;hi=Math.ceil((hi+pad)*2)/2;if(hi-lo<1)hi=lo+1;
-    const X=d=>L+(dayN(d)-t0)/span*(W-L-R),Y=v=>T+(hi-v)/(hi-lo)*(H-T-B);
+    const Xn=n=>L+(n-t0)/span*(W-L-R),X=d=>Xn(dayN(d)),Y=v=>T+(hi-v)/(hi-lo)*(H-T-B);
     const tr=pts.map((x,i)=>{const w=pts.filter(y=>dayN(y.d)<=dayN(x.d)&&dayN(x.d)-dayN(y.d)<=6);return{d:x.d,v:w.reduce((a,y)=>a+y.kg,0)/w.length}});
     let g='';
     for(let i=0;i<=3;i++){const v=lo+(hi-lo)*i/3,y=Y(v);g+=`<line x1="${L}" x2="${W-R}" y1="${y}" y2="${y}" style="stroke:var(--ln)"/><text x="${L-5}" y="${y+4}" text-anchor="end" style="fill:var(--mu);font-size:10px">${nf(v)}</text>`}
     if(wg)g+=`<line x1="${L}" x2="${W-R}" y1="${Y(wg)}" y2="${Y(wg)}" style="stroke:var(--mu)" stroke-dasharray="5 4"/><text x="${W-R}" y="${Y(wg)-4}" text-anchor="end" style="fill:var(--mu);font-size:10px">Ziel ${nf(wg)}</text>`;
     const xl=[0,.5,1].map((f,i)=>{const dd=new Date((t0+Math.round(span*f))*864e5);const s=dd.getUTCDate()+'.'+(dd.getUTCMonth()+1)+'.'+(span>200?String(dd.getUTCFullYear()).slice(2):'');return`<text x="${L+(W-L-R)*f}" y="${H-8}" text-anchor="${i===0?'start':i===2?'end':'middle'}" style="fill:var(--mu);font-size:10px">${s}</text>`}).join('');
     const line=a=>a.map((p,i)=>(i?'L':'M')+X(p.d).toFixed(1)+' '+Y(p.v).toFixed(1)).join('');
+    const nl=a=>a.map((q,i)=>(i?'L':'M')+Xn(q.n).toFixed(1)+' '+Y(q.v).toFixed(1)).join('');
+    if(pl.length>1)g+=`<path d="${nl(pl)}" fill="none" style="stroke:var(--c2)" stroke-width="2" stroke-dasharray="7 4"/>`;
+    if(fl.length>1)g+=`<path d="${nl(fl)}" fill="none" style="stroke:var(--ac);opacity:.7" stroke-width="2" stroke-dasharray="2 4" stroke-linecap="round"/>`;
+    const endM=(s,c)=>{if(!s||!s.hit)return'';const e=s.pts[s.pts.length-1];return e.n<=t1?`<circle cx="${Xn(e.n).toFixed(1)}" cy="${Y(e.v).toFixed(1)}" r="4" style="fill:var(--card);stroke:${c}" stroke-width="2"/>`:''};
+    g+=endM(WL.plan,'var(--c2)')+endM(WL.fc,'var(--ac)');
     g+=xl+(pts.length>1?`<path d="${line(pts.map(x=>({d:x.d,v:x.kg})))}" fill="none" style="stroke:var(--ac);opacity:.35" stroke-width="1.5"/><path d="${line(tr)}" fill="none" style="stroke:var(--ac)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>`:'')+
       pts.map(x=>`<circle cx="${X(x.d).toFixed(1)}" cy="${Y(x.kg).toFixed(1)}" r="${pts.length>60?1.8:3}" style="fill:var(--ac)"/>`).join('');
-    $('#wchart').innerHTML=`<svg viewBox="0 0 ${W} ${H}" width="100%" style="display:block">${g}</svg><div class="mu" style="font-size:12px">kg · kräftige Linie: 7-Tage-Trend, blasse Linie: Einzelwerte${wg?' · gestrichelt: Ziel':''}</div>`;
+    $('#wchart').innerHTML=`<svg viewBox="0 0 ${W} ${H}" width="100%" style="display:block">${g}</svg><div class="mu" style="font-size:12px">kg · kräftig: 7-Tage-Trend · blass: Einzelwerte${wg?' · grau: Ziel':''}${WL.plan?' · <span style="color:var(--c2)">gelb</span>: Plan mit '+db.goal+' kcal/Tag':''}${WL.fc?' · <span style="color:var(--ac)">gepunktet</span>: Prognose mit deinem Schnitt':''}${wr>=0&&(WL.plan||WL.fc)?' · „Bis Ziel“ zeigt den ganzen Weg':''}</div>`;
   }
   // Kennzahlen
   const last=all[all.length-1],card=(t,v,s)=>`<div class="card" style="margin:0;padding:10px"><div class="mu">${t}</div><div style="font-size:20px;font-weight:700">${v}</div>${s?`<div class="mu">${s}</div>`:''}</div>`;
@@ -797,6 +820,13 @@ function renderWeight(){
     c+=card('Aktuell',nf(last.kg)+' kg','am '+dmy(last.d,1));
     if(pts.length>1){const df=pts[pts.length-1].kg-pts[0].kg;c+=card('Änderung',(df>0?'+':df<0?'−':'')+nf(Math.abs(df))+' kg','seit '+dmy(pts[0].d,1))}
     if(pts.length){c+=card('Tiefster',nf(Math.min(...pts.map(x=>x.kg)))+' kg','im Zeitraum')+card('Höchster',nf(Math.max(...pts.map(x=>x.kg)))+' kg','im Zeitraum')}
+    if(WL.plan&&all.length){
+      const n=dayN(last.d),pp=WL.plan.pts,pw=n>=pp[pp.length-1].n?pp[pp.length-1].v:pp[n-pp[0].n].v;
+      const tw=all.filter(x=>n-dayN(x.d)<=6),tv=tw.reduce((a,x)=>a+x.kg,0)/tw.length,dir=db.wgoal<all[0].kg?-1:1,ah=(pw-tv)*dir;
+      c+=card('Im Vergleich zum Plan',Math.abs(ah)<0.1?'im Plan':nf(Math.abs(ah))+' kg '+(ah>0?'voraus':'zurück'),'Plan: '+nf(pw)+' kg · Trend: '+nf(tv)+' kg');
+      const dt=s=>{const e=s.pts[s.pts.length-1];return s.hit?new Date(e.n*864e5).toLocaleDateString('de-DE',{day:'numeric',month:'short',year:'numeric',timeZone:'UTC'}):'nicht in 4 Jahren'};
+      c+=card('Ziel laut Plan',dt(WL.plan),WL.fc?'Prognose: '+dt(WL.fc):'Prognose: keine kcal-Daten');
+    }
     if(db.wgoal>0){const df=last.kg-db.wgoal;c+=card('Zielgewicht',nf(db.wgoal)+' kg',Math.abs(df)<0.05?'erreicht 🎉':'noch '+nf(Math.abs(df))+' kg '+(df>0?'runter':'rauf'))}
   }
   $('#wstats').innerHTML=c?'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">'+c+'</div>':'';
