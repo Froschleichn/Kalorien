@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <script>
-var VERSION=39;
-var VERSION_NAME='2026.11.22.2';
+var VERSION=40;
+var VERSION_NAME='2026.11.23.1';
 window.__live=0;
 (function(){try{
   var l=JSON.parse(localStorage.getItem('liveapp')||'null');
@@ -53,7 +53,7 @@ h2+.it{border-top:0}
 .top small{color:var(--mu);font-size:12.5px}
 .dn{display:flex;gap:6px}
 .dn button{background:var(--card);color:var(--tx);box-shadow:var(--sh);border:0;width:34px;height:34px;padding:0;border-radius:50%;font-size:18px;line-height:1}
-.hero{background:var(--hero);border-radius:22px;padding:12px 16px;margin-bottom:8px;display:flex;align-items:center;gap:18px;--ringc:var(--ac)}
+.hero{background:var(--hero);border-radius:22px;padding:10px 14px;margin-bottom:8px;display:flex;align-items:center;gap:14px;--ringc:var(--ac)}
 .hero.over{--ringc:var(--bad)}
 .ringw{position:relative;width:min(108px,30vw);flex:none;aspect-ratio:1}
 .ringw svg{width:100%;height:100%;transform:rotate(-90deg);display:block}
@@ -62,10 +62,20 @@ h2+.it{border-top:0}
 .rc{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
 .rc .n{font-size:clamp(23px,7vw,27px);font-weight:700;line-height:1;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
 .rc .l{font-size:10.5px;color:var(--mu);margin-top:2px}
-.hi{display:flex;flex-direction:column;gap:8px;font-variant-numeric:tabular-nums}
-.hi small{display:block;font-size:12.5px;color:var(--mu)}
-.hi b{font-size:18px;font-weight:650}
-.hi button{background:none;color:var(--tx);padding:0;border:0;font:inherit;font-weight:650;font-size:18px;text-decoration:underline;text-decoration-color:var(--mu);text-decoration-thickness:1px;text-underline-offset:4px}
+.hi{flex:1;min-width:0;display:flex;flex-direction:column;gap:7px;font-variant-numeric:tabular-nums}
+.hg{display:grid;grid-template-columns:1fr 1fr;gap:3px 10px}
+.hg>div{min-width:0}
+.hi small{display:block;font-size:11px;line-height:1.2;color:var(--mu);white-space:nowrap}
+.hi b{font-size:16px;font-weight:650;white-space:nowrap;line-height:1.25}
+.hi b em,.hi button em{font-style:normal;font-size:12px;font-weight:500;color:var(--mu)}
+.hg .ok{color:#2f9e5b}.hg .bd{color:var(--bad)}
+@media(prefers-color-scheme:dark){.hg .ok{color:#52c985}}
+.mbar{display:flex;height:6px;border-radius:4px;overflow:hidden;background:var(--track);gap:2px}
+.mbar s{display:block;height:100%;transition:flex-grow .6s}
+.mleg{display:flex;flex-wrap:wrap;gap:1px 9px;font-size:10.5px;letter-spacing:-.01em;color:var(--mu);margin-top:4px}
+.mleg span{display:inline-flex;align-items:center;gap:3px;white-space:nowrap}
+.mleg i{width:6px;height:6px;border-radius:2px;display:inline-block}
+.hi button{background:none;color:var(--tx);padding:0;border:0;font:inherit;font-weight:650;font-size:16px;line-height:1.25;white-space:nowrap;text-decoration:underline;text-decoration-color:var(--mu);text-decoration-thickness:1px;text-underline-offset:4px}
 .mt{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px}
 .mt .t{background:var(--card);border-radius:16px;padding:9px 11px;box-shadow:var(--sh)}
 .mt small{display:block;font-size:12px;color:var(--mu)}
@@ -112,8 +122,13 @@ input[type=date]{min-height:44px}
     <div class="rc"><span class="n" id="rem">0</span><span class="l" id="reml">kcal übrig</span></div>
   </div>
   <div class="hi">
-    <div><small>Gegessen</small><b><span id="tot">0</span> kcal</b></div>
-    <div><small>Tagesziel</small><button id="setg"><span id="goal"></span> kcal</button></div>
+    <div class="hg">
+      <div><small>Gegessen</small><b><span id="tot">0</span> <em>kcal</em></b></div>
+      <div><small>Tagesziel</small><button id="setg"><span id="goal"></span> <em>kcal</em></button></div>
+      <div><small>vom Ziel</small><b id="pct">0 %</b></div>
+      <div><small>Ø 7 Tage</small><b id="avg">–</b></div>
+    </div>
+    <div><div class="mbar" id="mbar"></div><div class="mleg" id="mleg"></div></div>
   </div>
 </div>
 <div class="mt">
@@ -275,6 +290,16 @@ function render(){
   $('#hero').classList.toggle('over',over);
   $('#rem').textContent=Math.abs(rem);$('#reml').textContent=over?'kcal drüber':'kcal übrig';
   $('#ring').style.strokeDashoffset=540.35*(1-Math.min(1,Math.max(0,t/db.goal)));
+  $('#pct').textContent=(db.goal>0?Math.round(t/db.goal*100):0)+' %';
+  {const dn=k=>{const a=k.split('-').map(Number);return Math.round(Date.UTC(a[0],a[1]-1,a[2])/864e5)},d0=dn(day),sums={};
+   db.e.forEach(e=>{const x=d0-dn(e.d);if(x>=1&&x<=7)sums[e.d]=(sums[e.d]||0)+e.k});
+   const v=Object.values(sums),el=$('#avg');
+   if(v.length){const a=Math.round(v.reduce((x,y)=>x+y,0)/v.length);el.innerHTML=a.toLocaleString('de-DE')+' <em>kcal</em>';el.className=a<=db.goal?'ok':'bd';el.title=v.length+' Tage mit Einträgen'}
+   else{el.textContent='–';el.className=''}}
+  {const MC={'Frühstück':'#f2b705','Mittagessen':'#2fb36d','Abendessen':'#6f7cf0','Snacks':'#ff7a5c'};
+   const ms=MEALS.map(m=>[m,es.filter(e=>e.m===m).reduce((a,e)=>a+e.k,0)]).filter(x=>x[1]>0);
+   $('#mbar').innerHTML=ms.map(([m,k])=>`<s style="flex-grow:${k};background:${MC[m]}" title="${m}: ${Math.round(k)} kcal"></s>`).join('')+(rem>0&&t>0?`<s style="flex-grow:${rem};background:transparent"></s>`:'');
+   $('#mleg').innerHTML=ms.length?ms.map(([m,k])=>`<span title="${m}"><i style="background:${MC[m]}"></i>${{'Frühstück':'🥣','Mittagessen':'🍽️','Abendessen':'🌙','Snacks':'🍎'}[m]} ${Math.round(k/t*100)}%</span>`).join(''):'<span>Noch keine Mahlzeit</span>'}
   const mg=macroGoals();
   [['p',P,mg.p],['c',C,mg.c],['f',F,mg.f]].forEach(([k,v,g])=>{
     $('#'+k+'g').textContent='/ '+g+' g';
