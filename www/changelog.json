@@ -1,5 +1,11 @@
 [
  {
+  "v": 43,
+  "name": "2026.11.23.4",
+  "date": "2026-11-23",
+  "notes": "Auswahllisten (Einheit, Mahlzeit, Aktivität) als eigenes Bottom-Sheet im App-Stil statt Android-Standarddialog"
+ },
+ {
   "v": 42,
   "name": "2026.11.23.3",
   "date": "2026-11-23",

@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <script>
-var VERSION=42;
-var VERSION_NAME='2026.11.23.3';
+var VERSION=43;
+var VERSION_NAME='2026.11.23.4';
 window.__live=0;
 (function(){try{
   var l=JSON.parse(localStorage.getItem('liveapp')||'null');
@@ -101,6 +101,17 @@ h2+.it{border-top:0}
 dialog{width:min(540px,96vw);border:0;border-radius:16px;padding:14px;background:var(--card);color:var(--tx);max-height:90vh}
 dialog::backdrop{background:#0008}
 #dlg{margin:auto auto 0;width:100%;max-width:560px;border-radius:26px 26px 0 0;padding:8px 16px calc(18px + env(safe-area-inset-bottom));max-height:92vh;overflow:auto;animation:shup .28s cubic-bezier(.2,.8,.2,1)}
+.xsel{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;background:var(--bg);color:var(--tx);border:1px solid var(--ln);border-radius:10px;padding:10px;text-align:left;min-width:0}
+.xsel span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.xsel::after{content:'';flex:none;width:7px;height:7px;border:solid var(--mu);border-width:0 2px 2px 0;transform:translateY(-3px) rotate(45deg);margin-right:3px}
+.amt .xsel{width:auto;max-width:170px;border:0;background:none;color:var(--mu);font-size:17px;padding:0 4px;gap:6px}
+label .xsel{margin-top:4px}
+#osh{margin:auto auto 0;width:100%;max-width:560px;border-radius:26px 26px 0 0;padding:8px 10px calc(14px + env(safe-area-inset-bottom));max-height:75vh;overflow:auto;animation:shup .28s cubic-bezier(.2,.8,.2,1)}
+#osh .ot{font-size:14px;font-weight:650;color:var(--mu);padding:0 12px 6px}
+#osh .oo{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;background:none;color:var(--tx);border-radius:14px;padding:14px 12px;font-size:17px;text-align:left}
+#osh .oo.on{background:var(--hero);color:var(--ac);font-weight:650}
+#osh .oo.on::after{content:'✓';font-weight:700}
+#osh .oo.plus{color:var(--ac);border-top:1px solid var(--ln);border-radius:0 0 14px 14px;margin-top:4px}
 @keyframes shup{from{transform:translateY(40%);opacity:.4}to{transform:none;opacity:1}}
 .shd{outline:0;width:40px;height:5px;border-radius:3px;background:var(--ln);margin:0 auto 12px;box-sizing:content-box;padding:6px 40px;background-clip:content-box;margin-top:-6px;touch-action:none}
 #dlg .dt{font-size:20px;font-weight:700;letter-spacing:-.01em}#drem{font-size:13px;white-space:nowrap}
@@ -236,7 +247,7 @@ input[type=date]{min-height:44px}
   </div>
   <div id="pick" hidden>
     <div class="ptop"><button class="x pbk" id="pback" aria-label="Zurück">‹</button><div class="av" id="pav"></div><div class="pnm"><b id="pn"></b><small id="psub"></small></div><button class="x pst" id="pstar" aria-label="Favorit">☆</button></div>
-    <div class="amt"><button class="ab" id="gmin" aria-label="Weniger">−</button><input id="gr" type="number" inputmode="decimal" step="any" value="100"><select id="un"></select><button class="ab" id="gplu" aria-label="Mehr">+</button></div>
+    <div class="amt"><button class="ab" id="gmin" aria-label="Weniger">−</button><input id="gr" type="number" inputmode="decimal" step="any" value="100"><select id="un" data-t="Einheit"></select><button class="ab" id="gplu" aria-label="Mehr">+</button></div>
     <div class="mu pg" id="pv"></div>
     <div class="pch" id="pch"></div>
     <div class="vmac"><div class="k"><b id="vk">0</b><small>kcal</small></div><div><b id="vp" style="color:var(--c1)">0</b><small>Eiweiß</small></div><div><b id="vc">0</b><small>KH</small></div><div><b id="vf">0</b><small>Fett</small></div></div>
@@ -250,7 +261,7 @@ input[type=date]{min-height:44px}
   <div class="row sp"><b>Eintrag bearbeiten</b><button class="x" id="ecl">×</button></div>
   <div style="display:grid;gap:8px;margin-top:10px">
     <input id="en" placeholder="Name">
-    <div class="row"><select id="em"></select><input id="edate" type="date"></div>
+    <div class="row"><select id="em" data-t="Mahlzeit"></select><input id="edate" type="date"></div>
     <div class="row"><input id="eg" type="number" inputmode="decimal" placeholder="Menge"><span>g</span></div>
     <input id="ek" type="number" inputmode="decimal" placeholder="kcal gesamt">
     <div class="row"><input id="ep" type="number" inputmode="decimal" placeholder="Eiweiß g"><input id="ec" type="number" inputmode="decimal" placeholder="KH g"><input id="ef" type="number" inputmode="decimal" placeholder="Fett g"></div>
@@ -283,7 +294,7 @@ input[type=date]{min-height:44px}
   <div style="display:grid;gap:10px;margin-top:10px">
     <label class="mu">Größe (cm)<input id="ph" type="text" inputmode="numeric" autocomplete="off" placeholder="z. B. 180"></label>
     <label class="mu">Alter (Jahre)<input id="pa" type="text" inputmode="numeric" autocomplete="off" placeholder="35"></label>
-    <label class="mu">Aktivität im Alltag<select id="pact"></select></label>
+    <label class="mu">Aktivität im Alltag<select id="pact" data-t="Aktivität im Alltag"></select></label>
     <div class="mu" id="pm" style="font-size:12px">Berechnet wird der Verbrauch eines Mannes mit deiner Größe, deinem Alter und deinem aktuellen Gewicht (Mifflin-St Jeor).</div>
     <button id="pok">Speichern</button>
   </div>
@@ -292,7 +303,7 @@ input[type=date]{min-height:44px}
 <dialog id="cdlg">
   <div class="row sp"><b>Vorschlag von Claude</b><button class="x" id="ccl">×</button></div>
   <div class="mu" style="font-size:13px;margin:6px 0 10px">Claude bekommt, was du heute gegessen hast, dein Ziel und die restlichen kcal, und schlägt passende Gerichte vor.</div>
-  <div class="row" style="margin-bottom:8px"><select id="cmeal"><option>Frühstück</option><option>Mittagessen</option><option>Abendessen</option><option>Snack</option></select></div>
+  <div class="row" style="margin-bottom:8px"><select id="cmeal" data-t="Mahlzeit"><option>Frühstück</option><option>Mittagessen</option><option>Abendessen</option><option>Snack</option></select></div>
   <input id="cwish" placeholder="Wünsche, z. B. vegetarisch, schnell, ohne Backofen" autocomplete="off">
   <textarea id="cprev" readonly rows="7" style="width:100%;margin-top:8px;font-size:12px;background:var(--bg);color:var(--mu);border:1px solid var(--ln);border-radius:10px;padding:8px;font-family:inherit"></textarea>
   <div class="row" style="margin-top:10px;flex-wrap:wrap">
@@ -303,6 +314,7 @@ input[type=date]{min-height:44px}
   <div class="mu" id="cmsg" style="font-size:12px;margin-top:6px"></div>
 </dialog>
 
+<dialog id="osh" aria-label="Auswahl"><div class="shd"></div><div class="ot" id="osht"></div><div id="osho"></div></dialog>
 <dialog id="vdlg">
   <div class="row sp"><b>Versionen</b><button class="x" id="vcl">×</button></div>
   <div class="mu" id="vm" style="font-size:12px;margin:6px 0">Antippen lädt die Version und startet neu. Versionen, die älter als deine installierte App sind, werden ignoriert – dann „Eingebaute Version“ wählen.</div>
@@ -431,6 +443,41 @@ $('#cl').onclick=closeD;
     else{d.style.transform='';setTimeout(()=>{d.style.transition=''},230)}
   };
   d.addEventListener('touchend',end);d.addEventListener('touchcancel',end);
+})();
+
+// Eigene Auswahl statt nativem Android-Select: <select> bleibt Datenquelle, Button + Bottom-Sheet im App-Stil
+(()=>{const sh=$('#osh'),list=$('#osho');let cur=null;
+  const VD=Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype,'value'),ID=Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype,'selectedIndex');
+  function sync(s){const o=s.options[s.selectedIndex];s._xb.firstChild.textContent=o?o.text:''}
+  function enh(s){
+    const b=document.createElement('button');b.type='button';b.className='xsel';b.innerHTML='<span></span>';
+    b.setAttribute('aria-haspopup','listbox');if(s.id)b.id='x-'+s.id;
+    s._xb=b;s.hidden=true;s.after(b);
+    Object.defineProperty(s,'value',{configurable:true,get(){return VD.get.call(this)},set(v){VD.set.call(this,v);sync(this)}});
+    Object.defineProperty(s,'selectedIndex',{configurable:true,get(){return ID.get.call(this)},set(v){ID.set.call(this,v);sync(this)}});
+    new MutationObserver(()=>sync(s)).observe(s,{childList:true,subtree:true,characterData:true});
+    s.addEventListener('change',()=>sync(s));
+    b.onclick=()=>open(s);sync(s);
+  }
+  function open(s){cur=s;
+    $('#osht').textContent=s.dataset.t||'';
+    list.innerHTML=[...s.options].map((o,i)=>`<button type="button" role="option" class="oo${i===s.selectedIndex?' on':''}${o.value==='+'?' plus':''}" data-i="${i}" aria-selected="${i===s.selectedIndex}"><span>${esc(o.text)}</span></button>`).join('');
+    sh.showModal();const on=list.querySelector('.on');if(on)on.focus();
+  }
+  list.onclick=e=>{const o=e.target.closest('.oo');if(!o||!cur)return;const s=cur,i=+o.dataset.i;sh.close();
+    if(i!==s.selectedIndex){s.selectedIndex=i;s.dispatchEvent(new Event('change',{bubbles:true}))}};
+  sh.addEventListener('click',e=>{if(e.target===sh)sh.close()});
+  sh.addEventListener('close',()=>{const s=cur;cur=null;if(s)s._xb.focus()});
+  // nach unten wischen schließt
+  let y0=null,dy=0,t0=0;
+  sh.addEventListener('touchstart',e=>{if(e.touches.length!==1||sh.scrollTop>0)return;y0=e.touches[0].clientY;dy=0;t0=Date.now();sh.style.transition='none'},{passive:true});
+  sh.addEventListener('touchmove',e=>{if(y0==null)return;dy=Math.max(0,e.touches[0].clientY-y0);if(dy>6){e.preventDefault();sh.style.transform=`translateY(${dy}px)`}},{passive:false});
+  const end=()=>{if(y0==null)return;y0=null;const v=dy/Math.max(1,Date.now()-t0);sh.style.transition='transform .2s ease';
+    if(dy>90||(dy>35&&v>.6)){sh.style.transform='translateY(100%)';setTimeout(()=>{sh.close();sh.style.transform='';sh.style.transition=''},200)}
+    else{sh.style.transform='';setTimeout(()=>{sh.style.transition=''},210)}
+    if(dy>6){const blk=ev=>{ev.stopPropagation();ev.preventDefault()};sh.addEventListener('click',blk,{capture:true,once:true});setTimeout(()=>sh.removeEventListener('click',blk,{capture:true}),350)}};
+  sh.addEventListener('touchend',end);sh.addEventListener('touchcancel',end);
+  document.querySelectorAll('select:not([hidden])').forEach(enh);
 })();
 
 const OFF='https://world.openfoodfacts.org';
