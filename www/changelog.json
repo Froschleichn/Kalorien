@@ -1,5 +1,11 @@
 [
  {
+  "v": 45,
+  "name": "2026.11.23.6",
+  "date": "2026-11-23",
+  "notes": "Mahlzeit wird beim Hinzufügen nach Uhrzeit vorbelegt (Frühstück, Mittagessen, Abendessen, sonst Snacks)"
+ },
+ {
   "v": 44,
   "name": "2026.11.23.5",
   "date": "2026-11-23",

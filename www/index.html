@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <script>
-var VERSION=44;
-var VERSION_NAME='2026.11.23.5';
+var VERSION=45;
+var VERSION_NAME='2026.11.23.6';
 window.__live=0;
 (function(){try{
   var l=JSON.parse(localStorage.getItem('liveapp')||'null');
@@ -356,6 +356,9 @@ const iso=d=>{const z=new Date(d-d.getTimezoneOffset()*6e4);return z.toISOString
 let day=iso(new Date()),cur=null,stream=null;
 const r=n=>Math.round(n*10)/10;
 const MEALS=['Frühstück','Mittagessen','Abendessen','Snacks'];
+// Mahlzeit passend zur Uhrzeit: 5–10 Frühstück, 11–14 Mittagessen, 17–22 Abendessen, sonst Snacks
+function mealNow(){const t=new Date(),m=t.getHours()*60+t.getMinutes();
+  return m>=300&&m<630?'Frühstück':m>=660&&m<870?'Mittagessen':m>=1020&&m<1320?'Abendessen':'Snacks'}
 
 // Tagesziele für die Makros aus dem Kalorienziel und dem letzten Gewicht: Eiweiß 1,8 g/kg, Fett 30 % der Energie, Rest Kohlenhydrate
 function macroGoals(){
@@ -430,9 +433,9 @@ function lastQty(x){
   const pt=x.lu&&x.lu!=='g'?(x.pt||[]).find(y=>y.n+'|'+y.g===x.lu):null;
   if(pt){const q=x.lq||1;return{g:q*pt.g,lab:(q===1?(/^\d/.test(pt.n)?'':'1 '):r(q)+' × ')+pt.n,pt,q}}
   const g=x.lu==='g'&&x.lq?x.lq:100;return{g,lab:r(g)+' g',pt:null,q:g}}
-$('#add').onclick=()=>{$('#dlg').showModal();showFav()};
+$('#add').onclick=()=>{$('#meal').value=mealNow();syncSeg();$('#dlg').showModal();showFav()};
 $('#q').addEventListener('input',()=>{$('#go').hidden=!$('#q').value.trim()});
-$('#addscan').onclick=()=>{$('#dlg').showModal();showFav();$('#scan').click()};
+$('#addscan').onclick=()=>{$('#meal').value=mealNow();syncSeg();$('#dlg').showModal();showFav();$('#scan').click()};
 $('#cl').onclick=closeD;
 // Bottom-Sheet: oben (Griff/Kopfzeile) nach unten wischen schließt das Fenster
 (()=>{const d=$('#dlg');let y0=null,dy=0,t0=0;
@@ -1127,7 +1130,7 @@ function askText(){
   `\n\nSchlage mir 3 konkrete Ideen für ${meal==='Snack'?'einen Snack':'das '+meal} vor. Gleiche aus, was mir heute an Nährstoffen fehlt (z. B. mehr Eiweiß, falls ich bisher wenig hatte), und bleib dabei unter meinem Tagesziel. Gib pro Idee die Zutaten mit Mengen in Gramm sowie kcal, Eiweiß, Kohlenhydrate und Fett an. Nur Zutaten aus dem normalen deutschen Supermarkt.`+(wish?`\nWünsche: ${wish}`:'');
 }
 function askRefresh(){$('#cprev').value=askText();$('#cmsg').textContent=''}
-$('#ask').onclick=()=>{const hr=new Date().getHours();$('#cmeal').value=hr<10?'Frühstück':hr<14?'Mittagessen':hr<17?'Snack':'Abendessen';askRefresh();$('#cdlg').showModal()};
+$('#ask').onclick=()=>{const mn=mealNow();$('#cmeal').value=mn==='Snacks'?'Snack':mn;askRefresh();$('#cdlg').showModal()};
 $('#ccl').onclick=()=>$('#cdlg').close();
 $('#cmeal').onchange=askRefresh;$('#cwish').oninput=askRefresh;
 $('#copen').onclick=()=>{window.open('https://claude.ai/new?q='+encodeURIComponent(askText()),'_blank')};
