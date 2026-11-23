@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <script>
-var VERSION=43;
-var VERSION_NAME='2026.11.23.4';
+var VERSION=44;
+var VERSION_NAME='2026.11.23.5';
 window.__live=0;
 (function(){try{
   var l=JSON.parse(localStorage.getItem('liveapp')||'null');
@@ -112,6 +112,15 @@ label .xsel{margin-top:4px}
 #osh .oo.on{background:var(--hero);color:var(--ac);font-weight:650}
 #osh .oo.on::after{content:'✓';font-weight:700}
 #osh .oo.plus{color:var(--ac);border-top:1px solid var(--ln);border-radius:0 0 14px 14px;margin-top:4px}
+#adlg{width:min(400px,92vw);border-radius:22px;padding:18px 18px 14px}
+#adlg .at{font-size:18px;font-weight:700;margin-bottom:4px}
+#adlg .am{color:var(--mu);font-size:14px;margin-bottom:6px}
+#adlg label{display:block;color:var(--mu);font-size:14px;margin-top:10px}
+#adlg label input{margin-top:4px;font-size:17px}
+#adlg .ab2{display:flex;gap:8px;margin-top:16px}
+#adlg .ab2 button{flex:1;padding:12px;font-weight:650}
+#adlg .ab2 .no{background:var(--bg);color:var(--tx)}
+#adlg .ab2 .del{background:var(--bad);color:#fff}
 @keyframes shup{from{transform:translateY(40%);opacity:.4}to{transform:none;opacity:1}}
 .shd{outline:0;width:40px;height:5px;border-radius:3px;background:var(--ln);margin:0 auto 12px;box-sizing:content-box;padding:6px 40px;background-clip:content-box;margin-top:-6px;touch-action:none}
 #dlg .dt{font-size:20px;font-weight:700;letter-spacing:-.01em}#drem{font-size:13px;white-space:nowrap}
@@ -315,6 +324,7 @@ input[type=date]{min-height:44px}
 </dialog>
 
 <dialog id="osh" aria-label="Auswahl"><div class="shd"></div><div class="ot" id="osht"></div><div id="osho"></div></dialog>
+<dialog id="adlg"><form method="dialog" id="af"><div class="at" id="at"></div><div class="am" id="am"></div><div id="aflds"></div><div class="ab2"><button type="button" class="no" id="ano">Abbrechen</button><button id="ayes">OK</button></div></form></dialog>
 <dialog id="vdlg">
   <div class="row sp"><b>Versionen</b><button class="x" id="vcl">×</button></div>
   <div class="mu" id="vm" style="font-size:12px;margin:6px 0">Antippen lädt die Version und startet neu. Versionen, die älter als deine installierte App sind, werden ignoriert – dann „Eingebaute Version“ wählen.</div>
@@ -397,7 +407,7 @@ $('#prev').onclick=()=>shift(-1);$('#next').onclick=()=>shift(1);
 $('#list').onclick=e=>{const am=e.target.closest('.addm');if(am){$('#meal').value=am.dataset.m;$('#dlg').showModal();showFav();return}
   const ed=e.target.closest('.edit');if(ed)return openEdit(ed.dataset.e);
   const id=e.target.dataset.id;if(id){db.e=db.e.filter(x=>String(x.id)!==id);save();render()}};
-$('#setg').onclick=()=>{const v=parseInt(prompt('Tagesziel (kcal):',db.goal));if(v>0){db.goal=v;db.gt=Date.now();save();render()}};
+$('#setg').onclick=async()=>{const a=await ask({t:'Tagesziel',f:[{l:'Kalorien pro Tag (kcal)',v:db.goal,num:1}],ok:'Speichern'});if(!a)return;const v=parseInt(a[0]);if(v>0){db.goal=v;db.gt=Date.now();save();render()}};
 
 function addEntry(o){db.e.push({id:Date.now().toString(36)+Math.random().toString(36).slice(2,6),d:day,m:$('#meal').value,...o});save();render();closeD()}
 function closeD(){stopScan();$('#dlg').close();$('#res').innerHTML='';$('#pick').hidden=true;$('#q').value='';$('#go').hidden=true;$('#man_d').open=$('#own_d').open=false;syncFt()}
@@ -479,6 +489,19 @@ $('#cl').onclick=closeD;
   sh.addEventListener('touchend',end);sh.addEventListener('touchcancel',end);
   document.querySelectorAll('select:not([hidden])').forEach(enh);
 })();
+
+// Eigener Dialog statt prompt()/confirm()/alert(): ask({t,m,f:[{l,v,ph,num}],ok,del,info}) → Promise (Werte-Array | true | null)
+function ask(o){return new Promise(res=>{
+  const d=$('#adlg'),fl=o.f||[];
+  $('#at').textContent=o.t||'';$('#am').textContent=o.m||'';$('#am').hidden=!o.m;
+  $('#aflds').innerHTML=fl.map((x,i)=>`<label>${esc(x.l||'')}<input data-i="${i}" type="text" autocomplete="off" ${x.num?'inputmode="decimal"':''} placeholder="${esc(x.ph||'')}" value="${esc(x.v==null?'':x.v)}"></label>`).join('');
+  const y=$('#ayes');y.textContent=o.ok||'OK';y.className=o.del?'del':'';$('#ano').hidden=!!o.info;
+  let done=false;const fin=v=>{if(done)return;done=true;d.onclose=null;if(d.open)d.close();res(v)};
+  $('#af').onsubmit=e=>{e.preventDefault();fin(fl.length?[...d.querySelectorAll('#aflds input')].map(i=>i.value):true)};
+  $('#ano').onclick=()=>fin(null);d.onclose=()=>fin(null);
+  d.onclick=e=>{if(e.target===d)fin(null)};
+  d.showModal();const i=d.querySelector('#aflds input');if(i){i.focus();i.select()}else y.focus();
+})}
 
 const OFF='https://world.openfoodfacts.org';
 const FIELDS='code,product_name,brands,nutriments,serving_size,serving_quantity,quantity';
@@ -721,13 +744,13 @@ $('#pch').onclick=e=>{const b=e.target.closest('button');if(!b)return;const c=b.
 const step=d=>{const v=+$('#gr').value||0,s=sel==='g'?(v<50||(v<=50&&d<0)?5:10):.5;$('#gr').value=r(Math.max(0,Math.round((v+d*s)/s)*s));upd()};
 $('#gmin').onclick=()=>step(-1);$('#gplu').onclick=()=>step(1);
 $('#pback').onclick=()=>{$('#pick').hidden=true;$('#q').value.trim()?$('#q').oninput():showFav()};
-$('#prm').onclick=()=>{if(cur&&db.items[cur.key]&&confirm('„'+cur.n+'“ aus der Liste entfernen?')){delete db.items[cur.key];save();$('#pick').hidden=true;showFav()}};
+$('#prm').onclick=async()=>{if(cur&&db.items[cur.key]&&await ask({t:'Entfernen?',m:'„'+cur.n+'“ aus „Häufig verwendet“ entfernen?',ok:'Entfernen',del:1})){delete db.items[cur.key];save();$('#pick').hidden=true;showFav()}};
 $('#gr').oninput=upd;
-$('#un').onchange=()=>{
+$('#un').onchange=async()=>{
   const v=$('#un').value,prevG=(+$('#gr').value||0)*ug();
   if(v==='+'){
-    const n=(prompt('Name der Portion (z. B. 1 Scheibe):','')||'').trim();
-    const g=parseFloat((prompt('Gewicht einer Portion in g:','')||'').replace(',','.'));
+    const a=await ask({t:'Eigene Portion',f:[{l:'Name',ph:'z. B. 1 Scheibe'},{l:'Gewicht einer Portion (g)',ph:'z. B. 30',num:1}],ok:'Hinzufügen'});
+    const n=a?a[0].trim():'',g=a?parseFloat(a[1].replace(',','.')):0;
     if(!n||!(g>0)){$('#un').value=sel;return}
     pts.push({n,g});const st=ensureItem(cur);st.pt=(st.pt||[]).concat({n,g});save();
     fillUnits(pts.length-1);$('#gr').value=1;
@@ -1059,16 +1082,16 @@ $('#wok').onclick=()=>{
   save();renderWeight();$('#wh').textContent=(ex?'Aktualisiert: ':'Gespeichert: ')+nf(kg)+' kg am '+dmy(d,1);
 };
 $('#wd').onchange=()=>{const ex=db.w.find(x=>x.d===$('#wd').value);if(ex)$('#wk').value=ex.kg};
-$('#wgoalb').onclick=()=>{
-  const v=prompt('Zielgewicht in kg (leer = kein Ziel):',db.wgoal||'');if(v===null)return;
+$('#wgoalb').onclick=async()=>{
+  const a=await ask({t:'Zielgewicht',m:'Leer lassen = kein Ziel',f:[{l:'Zielgewicht (kg)',v:db.wgoal||'',ph:'z. B. 90',num:1}],ok:'Speichern'});if(!a)return;const v=a[0];
   const n=parseFloat(String(v).replace(',','.'));
   if(!v.trim())delete db.wgoal;else if(n>=20&&n<=400)db.wgoal=n;else return;
   save();renderWeight();
 };
 document.querySelectorAll('.wtab').forEach(t=>t.onclick=()=>{wr=+t.dataset.r;renderWeight()});
-$('#wlist').onclick=e=>{
+$('#wlist').onclick=async e=>{
   const del=e.target.dataset.wd;
-  if(del){if(confirm('Gewichtseintrag vom '+dmy(del,1)+' löschen?')){db.w=db.w.filter(x=>x.d!==del);save();renderWeight()}return}
+  if(del){if(await ask({t:'Löschen?',m:'Gewichtseintrag vom '+dmy(del,1)+' löschen?',ok:'Löschen',del:1})){db.w=db.w.filter(x=>x.d!==del);save();renderWeight()}return}
   const ed=e.target.closest('.wedit');if(!ed)return;
   const x=db.w.find(y=>y.d===ed.dataset.d);if(!x)return;
   $('#wd').value=x.d;$('#wk').value=x.kg;$('#wh').textContent='Wert ändern und auf „Eintragen“ tippen.';$('#wpage').scrollTop=0;
@@ -1088,7 +1111,7 @@ $('#exp').onclick=async()=>{
 };
 $('#imp').onclick=()=>$('#file').click();
 $('#file').onchange=async e=>{
-  try{const j=JSON.parse(await e.target.files[0].text());if(Array.isArray(j.e)){db=j;db.items=db.items||{};db.w=db.w||[];db.prof=db.prof||{h:0,age:35,act:1.375};save();render()}}catch(x){alert('Ungültige Datei')}
+  try{const j=JSON.parse(await e.target.files[0].text());if(Array.isArray(j.e)){db=j;db.items=db.items||{};db.w=db.w||[];db.prof=db.prof||{h:0,age:35,act:1.375};save();render()}}catch(x){ask({t:'Import fehlgeschlagen',m:'Ungültige Datei',info:1})}
 };
 
 // Essensvorschlag: baut aus dem Tag eine Frage an Claude (öffnen, teilen oder kopieren)
@@ -1124,10 +1147,11 @@ $('#cshare').onclick=async()=>{
 showVer();
 try{const n=localStorage.getItem('kupdnote'),x=localStorage.getItem('kupdexp');if(n){$('#ust').textContent='· '+(x&&x!==VERSION_NAME?'Version '+x+' ist älter als die installierte App und wird nicht verwendet (Eingebaute Version wählen).':n);localStorage.removeItem('kupdnote');localStorage.removeItem('kupdexp')}}catch(e){}
 const RAW=(repo,ref)=>`https://raw.githubusercontent.com/${repo}/${ref}/www/`;
-function getRepo(){
+async function getRepo(){
   let repo=localStorage.getItem('krepo');
   if(!repo){
-    repo=(prompt('GitHub-Repository für Updates (benutzer/repo):','')||'').trim();
+    const a=await ask({t:'Updates',f:[{l:'GitHub-Repository (benutzer/repo)',ph:'benutzer/repo'}],ok:'Speichern'});
+    repo=a?a[0].trim():'';
     if(!/^[\w.-]+\/[\w.-]+$/.test(repo))return null;
     localStorage.setItem('krepo',repo);
   }
@@ -1146,7 +1170,7 @@ async function applyVersion(repo,ref,st,label){
   return{v,nm,html};
 }
 $('#upd').onclick=async()=>{
-  const st=$('#ust'),repo=getRepo();
+  const st=$('#ust'),repo=await getRepo();
   if(!repo){st.textContent='· Ungültige Eingabe.';return}
   st.textContent='· Suche Update …';
   try{
@@ -1160,7 +1184,7 @@ $('#upd').onclick=async()=>{
   }catch(e){st.textContent='· Update fehlgeschlagen (keine Verbindung?).'}
 };
 $('#vsel').onclick=async ev=>{
-  ev.preventDefault();const repo=getRepo();if(!repo)return;
+  ev.preventDefault();const repo=await getRepo();if(!repo)return;
   $('#vlist').innerHTML='<div class="mu">Lade …</div>';$('#vdlg').showModal();
   const cl=await fetchChangelog(repo);
   $('#vlist').innerHTML=`<div class="res" data-v="0" style="color:var(--tx)">Eingebaute Version (ohne Updates)<div class="mu">so, wie sie installiert wurde</div></div>`+
@@ -1171,7 +1195,7 @@ $('#vlist').onclick=async ev=>{
   const el=ev.target.closest('[data-v]');if(!el)return;const v=+el.dataset.v,st=$('#vm');
   if(v===0){localStorage.removeItem('liveapp');localStorage.setItem('kupdnote','Eingebaute Version aktiv');location.reload();return}
   if(v===VERSION)return;
-  const repo=getRepo();st.textContent='Lade Version …';
+  const repo=await getRepo();st.textContent='Lade Version …';
   try{
     // Commit zur Version über die GitHub-API finden (Commit-Nachricht beginnt mit "v<N>:" bzw. "Version <N>:")
     const cs=await(await fetch(`https://api.github.com/repos/${repo}/commits?path=www/index.html&per_page=60`)).json();

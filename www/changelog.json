@@ -1,5 +1,11 @@
 [
  {
+  "v": 44,
+  "name": "2026.11.23.5",
+  "date": "2026-11-23",
+  "notes": "Eingabe- und Bestätigungsdialoge (Zielgewicht, Tagesziel, eigene Portion, Löschen) im App-Stil statt Android-Standard"
+ },
+ {
   "v": 43,
   "name": "2026.11.23.4",
   "date": "2026-11-23",
