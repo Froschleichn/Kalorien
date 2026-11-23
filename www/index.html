@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <script>
-var VERSION=46;
-var VERSION_NAME='2026.11.23.7';
+var VERSION=47;
+var VERSION_NAME='2026.11.23.8';
 window.__live=0;
 (function(){try{
   var l=JSON.parse(localStorage.getItem('liveapp')||'null');
@@ -1022,13 +1022,6 @@ function renderWeight(){
     const Xn=n=>L+(n-t0)/span*(W-L-R),X=d=>Xn(dayN(d)),Y=v=>T+(hi-v)/(hi-lo)*(H-T-B);
     const tr=pts.map((x,i)=>{const w=pts.filter(y=>dayN(y.d)<=dayN(x.d)&&dayN(x.d)-dayN(y.d)<=6);return{d:x.d,v:w.reduce((a,y)=>a+y.kg,0)/w.length}});
     let g='';
-    // BMI-Zonen dezent im Hintergrund (nur mit hinterlegter Größe)
-    const hm=(PROF().h||0)/100;
-    if(hm>1){const Z=[[0,18.5,'#5b9bff','Untergewicht'],[18.5,25,'#4cd08a','Normal'],[25,30,'#e6c34a','Übergewicht'],[30,35,'#f0904a','Adipositas I'],[35,40,'#ef6a5a','Adipositas II'],[40,99,'#c8455a','Adipositas III']];
-      for(const[b0,b1,c,n]of Z){const v0=Math.max(lo,b0*hm*hm),v1=Math.min(hi,b1*hm*hm);if(v1<=v0)continue;
-        const y0=Y(v1),y1=Y(v0);g+=`<rect x="${L}" y="${y0.toFixed(1)}" width="${W-L-R}" height="${(y1-y0).toFixed(1)}" fill="${c}" fill-opacity=".09"/>`;
-        if(y1-y0>=13)g+=`<text x="${W-R-4}" y="${(y0+10).toFixed(1)}" text-anchor="end" fill="${c}" fill-opacity=".6" style="font-size:9px">${n} · BMI ${b0?String(b0).replace('.',','):'<18,5'}${b1<99&&b0?'–'+b1:b0?'+':''}</text>`;
-        if(b0&&b0*hm*hm>lo&&b0*hm*hm<hi)g+=`<line x1="${L}" x2="${W-R}" y1="${Y(b0*hm*hm).toFixed(1)}" y2="${Y(b0*hm*hm).toFixed(1)}" stroke="${c}" stroke-opacity=".25"/>`}}
     for(let i=0;i<=3;i++){const v=lo+(hi-lo)*i/3,y=Y(v);g+=`<line x1="${L}" x2="${W-R}" y1="${y}" y2="${y}" style="stroke:var(--ln)"/><text x="${L-5}" y="${y+4}" text-anchor="end" style="fill:var(--mu);font-size:10px">${nf(v)}</text>`}
     if(wg)g+=`<line x1="${L}" x2="${W-R}" y1="${Y(wg)}" y2="${Y(wg)}" style="stroke:var(--mu)" stroke-dasharray="5 4"/><text x="${L+4}" y="${Y(wg)-4}" text-anchor="start" style="fill:var(--mu);font-size:10px">Ziel ${nf(wg)}</text>`;
     const xl=[0,.5,1].map((f,i)=>{const dd=new Date((t0+Math.round(span*f))*864e5);const s=dd.getUTCDate()+'.'+(dd.getUTCMonth()+1)+'.'+(span>200?String(dd.getUTCFullYear()).slice(2):'');return`<text x="${L+(W-L-R)*f}" y="${H-8}" text-anchor="${i===0?'start':i===2?'end':'middle'}" style="fill:var(--mu);font-size:10px">${s}</text>`}).join('');
@@ -1046,7 +1039,6 @@ function renderWeight(){
     if(wg)leg.push(li(sw('stroke:var(--mu);stroke-width:1.5;stroke-dasharray:5 4'),'Ziel '+nf(wg)+' kg'));
     if(WL.plan)leg.push(li(sw('stroke:var(--c2);stroke-width:2;stroke-dasharray:7 4'),'Plan ('+db.goal+' kcal/Tag)'));
     if(WL.fc)leg.push(li(sw('stroke:var(--ac);opacity:.7;stroke-width:2;stroke-dasharray:2 4;stroke-linecap:round'),'Prognose (dein Ø)'));
-    if(hm>1){const lw=pts[pts.length-1].kg;leg.push(li(`<svg width="26" height="10" style="flex:none"><rect x="2" y="0" width="22" height="10" rx="2" fill="#4cd08a" fill-opacity=".18"/></svg>`,'BMI aktuell '+nf(lw/hm/hm)))}
     $('#wchart').innerHTML=`<svg viewBox="0 0 ${W} ${H}" width="100%" style="display:block">${g}</svg><div class="mu" style="display:grid;grid-template-columns:1fr 1fr;gap:6px 12px;font-size:12px;margin-top:8px">${leg.join('')}</div>${(WL.plan||WL.fc)?`<div class="mu" style="font-size:11px;margin-top:6px">${wr>=0?'Plan und Prognose reichen bis zum Ziel, „Bis Ziel“ zeigt den ganzen Weg. ':''}Kreis = Zielgewicht erreicht.</div>`:''}`;
   }
   // Kennzahlen
